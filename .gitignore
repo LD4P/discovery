@@ -32,4 +32,3 @@ config/master.key
 
 #Ignore .env files
 .env
-blacklight.yml
