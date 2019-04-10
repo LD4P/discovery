@@ -74,3 +74,5 @@ gem 'jquery-rails'
 gem 'devise'
 gem 'devise-guests', '~> 0.6'
 gem 'blacklight-marc', '>= 7.0.0.rc1', '< 8'
+# Use dotenv to load environment variables
+gem 'dotenv-rails', :groups => [:development, :test, :production]
