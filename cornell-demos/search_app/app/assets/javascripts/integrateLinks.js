@@ -71,6 +71,8 @@ $(document).ready(function() {
 				//if no wikidata uri then will just show null
 				var contentHtml = "<div>LOC: " + LOCURI + "</div>";
 				contentHtml += "<div>Wikidata: " + wikidataURI + "</div>";
+				//Get notable results
+				if(wikidataURI != null) getNotableWorks(wikidataURI);
 				e.popover(
 						{
 							content : contentHtml,
@@ -111,8 +113,36 @@ $(document).ready(function() {
 		return uri.split("/").pop();
 	}
 	
+	//Wikidata entity
+	function retrieveWikidataEntity(wikidataURI) {
+		
+	}
+	
+	//Wikidata notable works
+	function getNotableWorks(wikidataURI){
+		var wikidataEndpoint = "https://query.wikidata.org/sparql?";
+		var sparqlQuery = "SELECT ?notable_work ?title WHERE {<" + wikidataURI + "> wdt:P800 ?notable_work. ?notable_work wdt:P1476 ?title. }";
+	
+		$.ajax({
+			url : wikidataEndpoint,
+			headers : {
+				Accept : 'application/sparql-results+json'
+			},
+			data : {
+				query : sparqlQuery
+			},
+			success : function(data) {
+				
+				console.log("Notable works ");
+				console.log(data);
+			}
+
+		});
+	}
+	
 	//LOC: function to get JSON for LOC URI
 	//VIAF: function to call VIAF and extract same as relationships
+	//?Also potentially selected co-author relationships?
 	
 
 });
