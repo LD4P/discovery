@@ -1,0 +1,22 @@
+<div id="related_works_cards" class="card show-tools">
+    <div class="card-header">
+      <h2 class="mb-0 h6">Related Works</h2>
+    </div>
+
+    <ul id="related_works" class="list-group list-group-flush">
+      
+    </ul>
+  </div>  
+
+<%= render :partial => 'show_tools' %>
+  
+
+  
+<% unless @document.more_like_this.empty? %>
+  <div class="card">
+    <div class="card-header">More Like This</div>
+    <div class="card-body">
+      <%= render :collection => @document.more_like_this, :partial => 'show_more_like_this', :as => :document %>
+    </div>
+  </div>
+<% end %>
