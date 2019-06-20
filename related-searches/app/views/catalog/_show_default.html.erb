@@ -1,0 +1,45 @@
+<%# default partial to display solr document fields in catalog show view -%>
+<dl class="dl-horizontal">
+  <% document_show_fields(document).each do |solr_fname, field| -%>
+    <% if document.has? solr_fname  -%>
+	    <dt class="blacklight-<%= solr_fname.parameterize %>"><%= render_document_show_field_label document, :field => solr_fname %></dt>
+      <dd class="blacklight-<%= solr_fname.parameterize %>">
+       
+        <% if  solr_fname == 'author_json' -%>
+          <%= render_clickable_document_show_field_value :document => document, :field => solr_fname %>
+          <% authname = field_value solr_fname %>
+          <% document['author_json'].each do |authority| %>
+          <% heading = JSON.parse(authority) %>
+          <% if heading["authorizedForm"] == true %> 
+          <% type = heading['type']  %>
+          <% if heading['search2'].present?  %>
+          <% search = heading['search2'] %>
+          <% else search = heading['search1']  %>
+          <% end %>
+          <%# show heading popover for everything bigger than smartphone %>
+          <a href='#' role="button" tabindex = "0" data-poload='/browse/info?authq=<%=  search %>&amp;browse_type=Author&amp;headingtype=<%=  type %>' id="info" class="info-button hidden-xs"><span class="label label-info">
+            Info
+          </span>
+          </a>
+          <%# link directly to heading on smartphone %>
+          <a href="/browse/info?authq=<%=  search %>&amp;browse_type=Author&amp;headingtype=<%=  type %>" role="button" class="info-button visible-xs"><span class="label label-info">
+            Info
+          </span>
+          </a>
+          <% end %>
+          <% end %>
+       
+          <% elsif display_link? solr_fname -%>   
+           <%= render_display_link :document => document, :field => solr_fname %>
+
+        <% elsif display_clickable? solr_fname -%>
+          <%= render_clickable_document_show_field_value :document => document, :field => solr_fname %>
+        
+        <% else -%>
+          <%= field_value solr_fname %>
+        <% end -%>
+      </dd>
+    <% end -%>
+  <% end -%>
+</dl>
+

@@ -1,0 +1,231 @@
+// AVAILABILITY
+.availability {
+	.worldcat-search {
+		font-size: 14px;
+		display: block;
+		margin-top: 2em;
+		i {
+			color: $light-gray;
+		}
+	}
+	.location {
+		margin-top: 0;
+		margin-bottom: .25em;
+		font-size: 16px;
+	}
+	.location-online {
+		color: white;
+		background: $teal;
+		border-color: $teal;
+	}
+	.url_findingaid_display {
+		display: block;
+		margin-bottom: .5em;
+		padding-bottom: 1em;
+		font-size: 16px;
+		border-bottom: 2px solid $light-tan;
+	}
+	.list-unstyled {
+		padding: 0;
+		margin-bottom: 0;
+	}
+	.call-number {
+		margin-bottom: .5em;
+		font-family: $font-family-call-number;
+		span {
+			font-family: $realBaseFontFamily;
+		}
+	}
+	.status {
+		margin: 0 0 .5em 0;
+	}
+}
+.availability.well {
+	padding: 0;
+}
+h3.rare {
+	margin-bottom: 0;
+}
+.label-available {
+	background: $teal;
+	margin-right: .5em;
+	font-size: 90%;
+	font-weight: normal;
+	i {
+		color: white;
+	}
+}
+.holding,
+.holdings-error {
+	margin-bottom: 1em;
+	border-top: 2px solid $light-tan;
+	padding-top: .5em;
+}
+.online-label {
+	margin: 0 .5em .25em 0;
+}
+.holdings-online {
+	border-bottom: 2px solid $light-tan;
+	padding-bottom: .5em;
+	.online-label {
+		font-size: 16px;
+	}
+	.message {
+		font-size: 14px;
+		margin-top: .25em;
+	}
+}
+.holding:first-child {
+	border-top: 0;
+}
+.holding:last-of-type {
+	margin-bottom: 0;
+}
+
+.text-it,
+.map-it {
+	margin-left: .5em;
+	font-size: 12px;
+	font-weight: normal;
+}
+.text-it {
+	.tooltip-inner {
+		padding: 5px 10px;
+	}
+}
+.share-options { min-width: auto; }
+.message {
+	margin: 0 0 .5em 0;
+	line-height: 1.4em;
+	word-wrap: break-word;
+}
+.online-link {
+	margin-bottom: .4em;
+	line-height: 1.2em;
+	font-size: 16px;
+	a {
+		font-size: 90%;
+	}
+}
+.terms-of-use {
+	font-size: 85%;
+	margin-left: .5em;
+}
+.access-restriction {
+	display: block;
+	line-height: 1.2em;
+	margin-top: 1em;
+	h4 { 
+		font-weight: 700;
+		margin-bottom: .5em;
+		font-size: 14px;
+	}
+}
+.item-requests {
+	border-top: 5px solid $light-tan;
+	padding-top: 10px;
+	margin: .75em 0;
+	// Request scan button
+	.btn {
+		margin-bottom: 5px;
+	}
+	.btn-default {
+		border-bottom-color: #ccc; 
+		border-bottom-style: solid;
+	}
+}
+
+.google-books-link {
+	margin: 1.5em 0 0;
+	padding-top: 1em;
+	border-top: solid 2px #d8d2c9;
+}
+.holdings {
+	// th:first-child,
+	// th:nth-child(2),
+	// td:first-child,
+	// td:nth-child(2) {
+	// 	width: 30%;
+	// }
+	// padding: 0 1em;
+}
+// .holdings-online {
+// 	// th:first-child,
+// 	// th:nth-child(2) {
+// 	// 	width: 30%;
+// 	// }
+// 	// table {
+// 	// 	margin-bottom: 1em;
+// 	// }
+// }
+
+#request-loading-spinner {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	width: 2em;
+	height: 2em;
+}
+
+// Other forms
+// ----------------
+.other-forms {
+	h4 {
+		margin-bottom: 1em;
+		font-size: 20px;
+	}
+	.label-online {
+		color: white;
+		font-size: 12px;
+	}
+	p {
+		margin-top: 2em;
+	}
+}
+.other-form {
+	margin: 0 0 .5em 0;
+	border-bottom: 1px solid $light-tan;
+	padding-bottom: .5em;
+	span {
+		margin: 0 .5em 0 0;
+		font-size: 12px;
+		color: $gray;
+	}
+	.other-form-format {
+		i {
+			margin-right: .25em;
+		}
+	}
+	.other-form-title {
+		font-size: 110%;
+		color: $gray-dark;
+		display: block;
+		margin-bottom: .25em;
+	}
+	.label-online:hover {
+		background: $teal;
+		pointer: none;
+	}
+	.other-form-online {
+		span {
+			margin-right: 0;
+		}
+	}
+	// .online-label,
+	// .at-library-label {
+	// 	font-weight: 700;
+	// }
+}
+
+
+// MEDIA QUERIES
+// -------------------------
+
+// Small devices (tablets, 768px and up)
+// @media (min-width: $screen-sm) { 
+// }
+
+// Medium devices (desktops, 992px and up)
+// @media (min-width: $screen-md) {
+// }
+

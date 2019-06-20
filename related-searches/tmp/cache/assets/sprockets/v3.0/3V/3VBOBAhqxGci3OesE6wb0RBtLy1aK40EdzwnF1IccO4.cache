@@ -1,0 +1,26 @@
+I"(function() {
+  var search;
+
+  search = {
+    onLoad: function() {
+      this.initObjects();
+      return this.bindEventListener();
+    },
+    initObjects: function() {
+      return this.paneToggle = $('.display-toggle');
+    },
+    bindEventListener: function() {
+      return this.paneToggle.on('switch-change', this.toggleDisplay);
+    },
+    toggleDisplay: function() {
+      $('#toggle-panes').submit();
+      return false;
+    }
+  };
+
+  $(document).ready(function() {
+    return search.onLoad();
+  });
+
+}).call(this);
+:ET

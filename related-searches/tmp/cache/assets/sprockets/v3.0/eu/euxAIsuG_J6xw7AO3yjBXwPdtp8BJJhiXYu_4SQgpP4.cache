@@ -1,0 +1,46 @@
+I"’(function() {
+  $(document).ready(function() {
+    $('body.blacklight-advanced-index #q').focus();
+    return $('#add-row').click(function() {
+      var newRow;
+      newRow = $('.input_row:last').clone();
+      newRow.find('[id]').each(function() {
+        var newID;
+        newID = $(this).attr('id').replace(/\d+$/, function(str) {
+          return parseInt(str) + 1;
+        });
+        return $(this).attr('id', newID);
+      });
+      newRow.find('[for]').each(function() {
+        var newFor;
+        newFor = $(this).attr('for').replace(/\d+$/, function(str) {
+          return parseInt(str) + 1;
+        });
+        return $(this).attr('for', newFor);
+      });
+      newRow.find('input').each(function() {
+        var incrementedName;
+        if ($(this).attr('type') === 'text') {
+          $(this).val('');
+        }
+        if ($(this).attr('type') === 'radio') {
+          incrementedName = $(this).attr('name').replace(/\[(\d+)\]$/, function(match, p1) {
+            var increment;
+            increment = parseInt(p1) + 1;
+            return '[' + increment + ']';
+          });
+          $(this).attr('name', incrementedName);
+          if ($(this).val() !== 'AND') {
+            return $(this).attr('checked', false);
+          } else {
+            return $(this).attr('checked', true);
+          }
+        }
+      });
+      newRow.appendTo('.query_zone');
+      return false;
+    });
+  });
+
+}).call(this);
+:ET
