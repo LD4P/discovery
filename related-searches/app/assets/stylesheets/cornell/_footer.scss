@@ -1,0 +1,161 @@
+footer {
+	border-top: 1px solid #ddd;
+	p {
+		font-size: 12px;
+	}
+	a, a:hover {
+		color: $dark-gray;
+	}
+	.footer-nav {
+		margin-top: .25em;
+		margin-bottom: 1.5em;
+		overflow: hidden;
+	}
+	.footer-nav.nav > li {
+		padding: 0 10px;
+		float: left;
+		margin-bottom: .5em;
+	}
+	.footer-nav.nav > li:first-child {
+		padding-left: 0;
+	}
+	.footer-nav.nav > li > a {
+		padding: 0;
+	}
+	.btn-libraries {
+		background: $teal;
+		border-color: $teal;
+		margin-top: 15px;
+	}
+	.btn-libraries:hover {
+		background: $dark-teal;
+		border-color: $dark-teal;
+	}
+	.nav-pills {
+		margin-top: .25em;
+		a {
+			background: white;
+			font-family: $font-family-cul;
+			border: 1px solid $tan;
+			margin-bottom: 2px;
+			i {
+				margin-right: .25em;
+				color: $cornell-primary;
+				font-size: 125%;
+			}
+		}
+		a:hover, a:active, a:focus {
+			background: $dark-teal;
+			color: white;
+			border-color: $dark-teal;
+			i {
+				color: white;
+			}
+		}
+	}
+}
+
+.footer-copyright {
+	padding: 1.5em 0;
+	border-top: 1px solid #ddd;
+	margin-top: em;
+}
+
+.libraries-list {
+	padding: 0 0 2em;
+	.row {
+		margin-left: 0;
+	}
+	.libraries-collapse.in {
+		padding: 2em;
+	}
+	.libraries-collapse {
+		background: #2d2d2d;
+		overflow: hidden;
+		ul {
+			list-style: none;
+			padding-left: 0;
+			margin-bottom: 0;
+			margin-left: 0;
+		}
+		li { 
+			line-height: 1.5em;
+			padding-bottom: .5em;
+			font-size: 12px;
+		}
+		a:hover { background: #2d2d2d; }
+	}
+	.btn-libraries {
+		margin-bottom: 0;
+	}
+	.btn-libraries:focus, .btn-libraries:active {
+		box-shadow: none;
+	}
+}
+.libraries-group {
+	margin-left: 0;
+}
+footer {
+	h3 {
+		text-transform: uppercase;
+		font-size: 12px;
+		margin: 2em 0 0 0;
+		color: $dark-gray;
+	}
+}
+.social-links {
+	i { 
+		font-size: 40px;
+	}
+	a { 
+		color: $medium-gray;
+		border: 0;
+	}
+	a:hover {
+		border: 0;
+	}
+	.facebook-button { margin-right: 5px; }
+}
+.solr-core {
+	text-align: right;
+}
+
+// MEDIA QUERIES
+// -------------------------
+
+  // /* Extra small devices (phones, up to 480px) */
+  // /* No media query since this is the default in Bootstrap */
+
+  // /* Small devices (tablets, 768px and up) */
+  // @media (min-width: @screen-sm) { ... }
+
+  // /* Medium devices (desktops, 992px and up) */
+  // @media (min-width: @screen-md) { ... }
+
+  // /* Large devices (large desktops, 1200px and up) */
+  // @media (min-width: @screen-lg) { ... }
+
+
+/* Small devices (tablets, 768px and up) */
+@media (min-width: $screen-sm) { 
+	.feedback-link { 
+		text-align: right;
+	}
+	.footer-nav {
+		li {
+			border-left: 1px solid $light-gray;
+			font-size: 13px;
+		}
+		li:first-child {
+			border-left: 0;
+		}
+	}
+	footer {
+		p {
+			font-size: 13px;
+		}
+	}
+	.social-links {
+		text-align: right;
+	}
+}

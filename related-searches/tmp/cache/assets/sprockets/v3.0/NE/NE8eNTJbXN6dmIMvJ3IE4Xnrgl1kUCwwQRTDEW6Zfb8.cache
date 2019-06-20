@@ -1,0 +1,23 @@
+I"Ù(function() {
+  var utils;
+
+  utils = {
+    onLoad: function() {
+      return this.bindEventListener();
+    },
+    bindEventListener: function() {
+      return $('.hierarchical').hover(function() {
+        return utils.toggleHierarchy(this);
+      });
+    },
+    toggleHierarchy: function(activeLink) {
+      return $(activeLink).prevUntil('br').toggleClass('active-hierarchy');
+    }
+  };
+
+  $(document).ready(function() {
+    return utils.onLoad();
+  });
+
+}).call(this);
+:ET

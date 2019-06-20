@@ -1,0 +1,53 @@
+I"Y(function() {
+  var SelectAllManager;
+
+  $(window).load(function() {
+    return window.select_all_manager = new SelectAllManager;
+  });
+
+  SelectAllManager = (function() {
+    function SelectAllManager() {
+      this.element = $("#select_all_input");
+      this.prepopulate_value();
+      this.bind_element();
+    }
+
+    SelectAllManager.prototype.prepopulate_value = function() {
+      if ($("input.toggle_bookmark:checked").length === $("input.toggle_bookmark").length) {
+        return this.element.prop('checked', true);
+      }
+    };
+
+    SelectAllManager.prototype.bind_element = function() {
+      var parent;
+      parent = this;
+      $("input.toggle_bookmark").click(function() {
+        if (!this.checked) {
+          return parent.element.prop('checked', false);
+        } else {
+          return parent.prepopulate_value();
+        }
+      });
+      return this.element.change(function() {
+        if (this.checked) {
+          return parent.bookmark_all();
+        } else {
+          return parent.unbookmark_all();
+        }
+      });
+    };
+
+    SelectAllManager.prototype.bookmark_all = function() {
+      return $("input.toggle_bookmark:not(:checked)").click();
+    };
+
+    SelectAllManager.prototype.unbookmark_all = function() {
+      return $("input.toggle_bookmark:checked").click();
+    };
+
+    return SelectAllManager;
+
+  })();
+
+}).call(this);
+:ET
