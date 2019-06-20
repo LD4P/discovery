@@ -1,0 +1,59 @@
+<%= render :partial => 'databases_search_form'  %>
+<% alpha = params[:alpha]  %>
+<div class="row database-subject">
+  <div class="page-title col-sm-12">
+    <div class="return-link">
+      <%= link_to "/databases/" do  %>
+        <i class="fa fa-arrow-circle-left"></i>
+        Back to Databases
+      <% end %>
+    </div>
+  </div>
+</div>
+<div class="resources">
+  <% @db.each do |data| %>
+    <% dbid = data["id"] %>
+    <div class="document blacklight-database-name clearfix">
+      <div class="document-data">
+        <h2 class="blacklight-title_display">
+          <% if data["fulltitle_vern_display"].present? %>
+            <%= data["fulltitle_vern_display"] %>
+          <% else %>
+            <%= data["fulltitle_display"] %>
+          <% end %>
+        </h2>
+        <div class="description">
+          <p>
+            <% if data["summary_display"].present? %>
+            <%= data["summary_display"][0] %>
+            <% end %>
+          </p>
+        </div>
+        <div class="links">
+          <p><%= link_to 'See catalog record for access links',"/catalog/#{dbid}" %></p>
+        </div>
+        <div class="terms">
+          <% if data["dbcode"].nil? %>
+            <% dbcode = "" %>
+          <% else %>
+            <% dbcode = data["dbcode"][0] %>
+          <% end %>
+          <% if data["providercode"].nil? %>
+            <% providercode = "" %>
+          <% else %>
+            <% providercode = data["providercode"][0] %>
+          <% end %>
+          <%= link_to 'Terms of Use',"/databases/tou/#{dbid}" %>
+        </div>
+      </div>
+      <% if data["sixfivethree"].present? %>
+        <p>
+          Subject(s): 
+          <% data["sixfivethree"].each do |s| %>
+          <%= link_to s,"/databases/subject/#{s}", :title => "Subject: #{s}" %><% unless data["sixfivethree"].last == s %>, <% end %>
+          <% end %>
+           </p>
+          <% end %>
+    </div>
+  <% end %>
+</div>
