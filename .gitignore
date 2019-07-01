@@ -14,6 +14,8 @@ db/*.sqlite3-journal
 # Ignore all logfiles and tempfiles.
 log/*
 tmp/*
+related-searches/tmp/*
+
 !*/log/.keep
 !*/tmp/.keep
 
