@@ -10,11 +10,13 @@
 # Ignore the default SQLite database.
 db/*.sqlite3
 db/*.sqlite3-journal
+related-searches/db/*.sqlite3
 
 # Ignore all logfiles and tempfiles.
 log/*
 tmp/*
-related-searches/tmp/*
+/related-searches/tmp
+/related-searches/log
 
 !*/log/.keep
 !*/tmp/.keep
@@ -34,3 +36,6 @@ config/master.key
 
 #Ignore .env files
 .env
+
+# Mac OS files
+*.DS_Store
