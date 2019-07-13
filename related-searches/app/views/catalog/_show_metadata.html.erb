@@ -19,7 +19,7 @@
         </div>
         <div class="row">
           <div class="col-md-4 col-md-push-8">
-            <div class="availability panel panel-default">
+            <div id="availability-panel" class="availability panel panel-default">
               <div class="panel-heading">
                 <h3 class="panel-title">Availability</h3>
               </div>
@@ -141,7 +141,7 @@
               <% if  field_value('other_availability_json').present? || field_value('workid_display').present?   %>
                 <div class="availability panel panel-default">
                   <div class="panel-heading">
-                    <h3 class="panel-title">Other forms of this work</h3>
+                    <h3 class="panel-title">Other forms of this work @ Cornell</h3>
                   </div>
                   <div class="panel-body">
                     <% if  field_value('other_availability_json').present?  %>
