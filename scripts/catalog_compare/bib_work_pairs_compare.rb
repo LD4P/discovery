@@ -20,8 +20,14 @@ def lookup_works(works)
     sleep(3) # slow the rate at which we hit the API
     work_id = work.first
     bib_id = work.last
-    q_num_and_title = sparql_request(work_id)
-    write_file(bib_id, work_id, q_num_and_title)
+    begin
+      q_num_and_title = sparql_request(work_id)
+      write_file(bib_id, work_id, q_num_and_title)
+    rescue
+      puts "*** connection error retry ***"
+      retry
+    end
+    
   end
 end
 
