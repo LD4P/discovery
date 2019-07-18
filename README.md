@@ -6,6 +6,8 @@ Documenting work (including planning, design, and implementation) being done as 
 * [Knowledge panels or KPAOW](https://docs.google.com/document/d/1XuXH9n1YOhZY9cJhalA6ceTjOSpJrCsveoRgZyAUfwc/edit?usp=sharing) 
 
 ## Stanford info
+* [SearchWorks LD code](https://github.com/sul-dlss/SearchWorks/tree/linked-data-experiments)
+* [SearchWorks LD demo](https://searchworks-ld.stanford.edu/)
 
 ## Discovery-related references and presentations
 * [Discovery 'on the ground'](https://wiki.duraspace.org/pages/viewpage.action?pageId=108757717&src=contextnavpagetreemode) 
