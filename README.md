@@ -7,6 +7,7 @@ Documenting work (including planning, design, and implementation) being done as 
 * [Motivating search examples](https://docs.google.com/presentation/d/1vew3-5OkmbHVh5IHS3HLCOqEba7u3fRsgvdLJNdAFDE/edit?usp=sharing)
 * [Mockups for evaluation - thank you Astrid!!](https://invis.io/35T0GUYXEZ6)
 * [Scenarios, data, storyboard review](https://docs.google.com/document/d/1MyaqhIE6XE3dwUQHh6dqZhoa7YiF7YXewQ6aIWH-wxU/edit?usp=sharing)
+* [GitHub issue defining features for KPAOW demo](https://github.com/LD4P/discovery/issues/6)
 
 ## Stanford info
 * [SearchWorks LD code](https://github.com/sul-dlss/SearchWorks/tree/linked-data-experiments)
