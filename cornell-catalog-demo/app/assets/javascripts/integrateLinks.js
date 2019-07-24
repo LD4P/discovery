@@ -5,15 +5,25 @@ $(document).ready(function() {
 			function() {
 				var e = $(this);
 				e.off('click');
+				var baseUrl = e.attr("base-url")
 				var auth = e.attr("data-auth");
 				auth = auth.replace(/,\s*$/, "");
 				//Also periods
 				auth = auth.replace(/.\s*$/, "");
-				console.log(auth);
+				//Set up container
+				var contentHtml = "<div id='popoverContent'><div id='wikidataContent'></div><div id='digitalCollectionsContent'></div></div>";
+        e.popover(
+            {
+              content : contentHtml,
+                html : true,
+                trigger : 'focus'
+            }).popover('show');
+				//
 				var lookupURL = "http://id.loc.gov/authorities/names/suggest/?q="
 					+ auth
 					+ "&rdftype=PersonalName&count=1";
 				// Copied from original bfe example
+				
 				$
 				.ajax({
 					url : lookupURL,
@@ -30,9 +40,69 @@ $(document).ready(function() {
 						}
 					}
 				});
-
+				
+				//Add query to lookup digital collections
+				searchDigitalCollections(baseUrl, auth);
 			});
 
+	
+	//Function to lookup digital collections
+	function searchDigitalCollections(baseUrl, authString) {
+	  var lookupURL = baseUrl + "proxy/search?q=" + authString;
+	  $
+    .ajax({
+      url : lookupURL,
+      dataType : 'json',
+      success : function(data) {
+         console.log("success querying dig collections");
+         console.log(data);
+         //Digital collection results, append 
+         var results = [];
+         if("response" in data && "docs" in data.response) {
+           results = data["response"]["docs"];
+           //iterate through array
+           var resultsHtml = "<div><ul>";
+           var authorsHtml ="<div>";
+           var authorsHtmlArray = [];
+           var maxLen = 10;
+           var len = results.length;
+           if(len > maxLen) len = maxLen;
+           var l;
+           for(l = 0; l < len; l++) {
+             var result = results[l];
+             var id = result["id"];
+             var title = result["title_tesim"];
+             var digitalURL = "http://digital.library.collections.edu/catalog/" + id;
+             resultsHtml += "<li><a href='" + digitalURL + "'>" + title + "</a></li>";
+             var creator = [], creator_facet = [];
+             if("creator_tesim" in result)
+               creator = result["creator_tesim"];
+             if("creator_facet_tesim" in result)
+               creator_facet = result["creator_facet_tesim"];     
+             if(creator.length) {
+               var c = creator.length;
+               var i;
+               for(i = 0; i < creator.length; i++ ) {
+                 authorsHtmlArray.push("<a href='" + baseUrl + "catalog?q=" + creator[i] + "&search_field=all_fields'>" + creator[i] + "</a>");
+               }
+             }
+           }
+           
+  
+           resultsHtml += "</ul></div>";
+           authorsHtml += authorsHtmlArray.join(", ") + "</div>";
+           var displayHtml = "<div><h4>Digital Collections Results</h4>" + 
+           resultsHtml + "<h4>Related Digital Collections Contributors</h4>" + 
+           authorsHtml + "</div>";
+           console.log(displayHtml)
+           $("#digitalCollectionsContent").append(displayHtml);
+         }
+         
+      }
+    });
+	}
+	
+	
 	// function to process results from LOC lookup
 
 	function parseLOCSuggestions(suggestions) {
@@ -71,23 +141,15 @@ $(document).ready(function() {
 				var wikidataURI = parseWikidataSparqlResults(data);
 				// Do a popover here with the wikidata uri and the loc uri
 				//if no wikidata uri then will just show null
-				var contentHtml = "<div id='popoverContent'>";
-				contentHtml += "<div>Source: Wikidata</div><div id='entityImage'></div>";
-				//<div>LOC: " + LOCURI + "</div>";
-				//contentHtml += "<div>Wikidata: " + wikidataURI + "</div>";
-				contentHtml += "</div>";
+				var contentHtml = "<div>Source: Wikidata</div><div id='entityImage'></div>";
+				$("#wikidataContent").append(contentHtml);
 				//Get notable results
 				if(wikidataURI != null) {
 					getImage(wikidataURI);
 					getNotableWorks(wikidataURI);
 					getInfluencedBy(wikidataURI);
 				}
-				e.popover(
-						{
-							content : contentHtml,
-								html : true,
-								trigger : 'focus'
-						}).popover('show');
+				
 
 			}
 
@@ -165,7 +227,7 @@ $(document).ready(function() {
 							}
 						}
 						notableWorksHtml += notableHtmlArray.join(", ") + "</div>";
-						$("#popoverContent").append(notableWorksHtml);
+						$("#wikidataContent").append(notableWorksHtml);
 					}
 				}
 			}
@@ -211,7 +273,7 @@ $(document).ready(function() {
 							}
 						}
 						notableWorksHtml += notableHtmlArray.join(", ") + "</div>";
-						$("#popoverContent").append(notableWorksHtml);
+						$("#wikidataContent").append(notableWorksHtml);
 					}
 				}
 			}

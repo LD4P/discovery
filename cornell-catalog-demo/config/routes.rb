@@ -21,6 +21,9 @@ BlacklightCornell::Application.routes.draw do
 resources :solr_documents, except: [:index], path: '/catalog', controller: 'catalog' do
       concerns :exportable
 end
+
+#Adding proxy controller to access external URLs like digital collections
+get 'proxy/search'  
   
 #get 'bookmarks/email_login_required' => 'bookmarks#email_login_required'
 get 'bookmarks/show_email_login_required_bookmarks' => 'bookmarks#show_email_login_required_bookmarks'
@@ -172,8 +175,7 @@ devise_for :users, controllers: {
   match 'book_bags/email', via: [:get, :post]
   get 'book_bags/endnote(.:format)' => 'book_bags#endnote'
   get 'book_bags/ris(.:format)' => 'book_bags#ris'
-
-
+ 
 
   mount BlacklightCornellRequests::Engine => '/request', :as => 'blacklight_cornell_request'
 end

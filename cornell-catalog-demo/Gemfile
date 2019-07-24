@@ -66,6 +66,7 @@ group :development, :test do
   gem 'pry-byebug'
   gem 'meta_request'
   gem 'awesome_print'
+  gem 'xray-rails' # Adding to explore which views are used
 end
 
 group :test do
