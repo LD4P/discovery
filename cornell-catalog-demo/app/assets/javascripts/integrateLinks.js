@@ -72,7 +72,7 @@ $(document).ready(function() {
              var result = results[l];
              var id = result["id"];
              var title = result["title_tesim"];
-             var digitalURL = "http://digital.library.collections.edu/catalog/" + id;
+             var digitalURL = "http://digital.library.cornell.edu/catalog/" + id;
              resultsHtml += "<li><a href='" + digitalURL + "'>" + title + "</a></li>";
              var creator = [], creator_facet = [];
              if("creator_tesim" in result)
