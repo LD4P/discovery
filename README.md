@@ -3,6 +3,9 @@ Documenting work (including planning, design, and implementation) being done as 
 
 ## Grant (overall) questions/discussions
 * [Initial brainstorming/analysis](https://drive.google.com/open?id=1hQ4ll0Qt58Jz2tA2WjAKCjsOtl3Ehk0n)
+* [Knowledge panel examples](https://docs.google.com/presentation/d/13cODMrn1svhfrkk_pJi9Mw26M9nGa7tXK3cpuYUAZd8/edit?usp=sharing)
+* [Browsing examples and related examples](https://docs.google.com/presentation/d/1r5hORfoKrUlui5GV2RJMFx92J4j7cBhIv1BnR0xEIps/edit?usp=sharing)
+* Also see Discovery Affinity Group page (referenced below)
 
 ## Cornell-specific or related 
 * [Overall draft plan for discovery work](https://docs.google.com/document/d/1ZSv0VyP-WZa4_FjLKGGqxx8xOHuYoQ2l4QU4Lz4vIQA/edit?usp=sharing)
