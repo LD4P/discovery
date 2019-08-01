@@ -18,6 +18,7 @@ Documenting work (including planning, design, and implementation) being done as 
 * [Mockups for evaluation - thank you Astrid!!](https://invis.io/35T0GUYXEZ6)
 * [Scenarios, data, storyboard review](https://docs.google.com/document/d/1MyaqhIE6XE3dwUQHh6dqZhoa7YiF7YXewQ6aIWH-wxU/edit?usp=sharing)
 * [GitHub issue defining features for KPAOW demo](https://github.com/LD4P/discovery/issues/6)
+* Mockup evaluation (coming soon)
 
 ## Stanford info
 * [SearchWorks LD (Stanford) Guerilla testing and results (Astrid)](https://docs.google.com/document/d/1CmN1DgDCNxGJBT3SA7Q63gN1zAJcgX22xXet6N0h-GI/edit?usp=sharing)
