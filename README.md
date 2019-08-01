@@ -1,5 +1,8 @@
-# discovery
+# Discovery
 Documenting work (including planning, design, and implementation) being done as part of LD4P2 grant including institution-specific work for the grant (such as at Cornell).
+
+## Grant (overall) questions/discussions
+* [Initial brainstorming/analysis](https://drive.google.com/open?id=1hQ4ll0Qt58Jz2tA2WjAKCjsOtl3Ehk0n)
 
 ## Cornell-specific or related 
 * [Overall draft plan for discovery work](https://docs.google.com/document/d/1ZSv0VyP-WZa4_FjLKGGqxx8xOHuYoQ2l4QU4Lz4vIQA/edit?usp=sharing)
