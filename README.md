@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Discovery
 Documenting work (including planning, design, and implementation) being done as part of LD4P2 grant including institution-specific work for the grant (such as at Cornell).
 
@@ -11,6 +12,11 @@ Documenting work (including planning, design, and implementation) being done as 
    
 * Also see Discovery Affinity Group page (referenced below)
 
+=======
+# discovery
+Documenting work (including planning, design, and implementation) being done as part of LD4P2 grant including institution-specific work for the grant (such as at Cornell).
+
+>>>>>>> bbc01cd5e5d9d28609162dd12e1f96d115d4d62a
 ## Cornell-specific or related 
 * [Overall draft plan for discovery work](https://docs.google.com/document/d/1ZSv0VyP-WZa4_FjLKGGqxx8xOHuYoQ2l4QU4Lz4vIQA/edit?usp=sharing)
 * [Knowledge panels or KPAOW](https://docs.google.com/document/d/1XuXH9n1YOhZY9cJhalA6ceTjOSpJrCsveoRgZyAUfwc/edit?usp=sharing) 
@@ -18,10 +24,15 @@ Documenting work (including planning, design, and implementation) being done as 
 * [Mockups for evaluation - thank you Astrid!!](https://invis.io/35T0GUYXEZ6)
 * [Scenarios, data, storyboard review](https://docs.google.com/document/d/1MyaqhIE6XE3dwUQHh6dqZhoa7YiF7YXewQ6aIWH-wxU/edit?usp=sharing)
 * [GitHub issue defining features for KPAOW demo](https://github.com/LD4P/discovery/issues/6)
+<<<<<<< HEAD
 * Mockup evaluation (coming soon)
 
 ## Stanford info
 * [SearchWorks LD (Stanford) Guerilla testing and results (Astrid)](https://docs.google.com/document/d/1CmN1DgDCNxGJBT3SA7Q63gN1zAJcgX22xXet6N0h-GI/edit?usp=sharing)
+=======
+
+## Stanford info
+>>>>>>> bbc01cd5e5d9d28609162dd12e1f96d115d4d62a
 * [SearchWorks LD code](https://github.com/sul-dlss/SearchWorks/tree/linked-data-experiments)
 * [SearchWorks LD demo](https://searchworks-ld.stanford.edu/)
 
