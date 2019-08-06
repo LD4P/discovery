@@ -56,7 +56,6 @@ WHERE {
       bindings.first["itemLabel"]["value"] # title
     ]
   end
-  response_json, response_hash, bindings = nil, nil, nil
   return output if output
   return false
 end
