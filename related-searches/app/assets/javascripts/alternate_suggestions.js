@@ -8,26 +8,20 @@ var buildAlternateSuggestions = {
 
   // function checks each suggested search to display only those with > 0 catalog results
   checkSuggestions: function(suggestions) {
-    nonzero_suggestions = []; // array will hold suggested searches that yeild results
-    $.each(suggestions, function(i, val) {
-      $.ajax({ // would be nice to pull url from env var rather than directly include it in code
-          url: "http://da-prod-solr8.library.cornell.edu/solr/ld4p2-blacklight/select?indent=on&wt=json&rows=0&q=" + val,
-          type: 'GET',
-          dataType: 'jsonp',
-          jsonp: 'json.wrf', // avoid CORS and CORB errors
-        complete: function(data) {
-          // add to array if more than zero results
-          if ( data["responseJSON"]["response"]["numFound"] > 0 ) {
-            nonzero_suggestions.push(val)
-          }
-        }
-      });
-    });
-    // wait while ajax results populate nonzero_suggestions array, then display the array on page
-    setTimeout(function() {
-      buildAlternateSuggestions.displaySuggestions(nonzero_suggestions);
-    }, 1500)
-},
+    var nonzeroSuggestions = [];
+    var facetList = '&facet.query=' + suggestions.join('&facet.query=')
+    var solrQuery = "http://da-prod-solr8.library.cornell.edu/solr/ld4p2-blacklight/select?indent=on&wt=json&rows=0&q=*.*&facet=true" + facetList
+    $.ajax({ // would be nice to pull url from env var rather than directly include it in code
+      url: solrQuery,
+      type: 'GET',
+      dataType: 'jsonp',
+      jsonp: 'json.wrf', // avoid CORS and CORB errors
+      complete: function(response) {
+        var countsList = response["responseJSON"]["facet_counts"]["facet_queries"];
+        buildAlternateSuggestions.displaySuggestions(Object.keys(countsList));
+      }
+    });    
+  },
 
   makeAjaxCalls: function(q) {
     console.log("makeAjaxCalls");
