@@ -8,7 +8,6 @@ var buildAlternateSuggestions = {
 
   // function checks each suggested search to display only those with > 0 catalog results
   checkSuggestions: function(suggestions) {
-    var nonzeroSuggestions = [];
     var facetList = '&facet.query=' + suggestions.join('&facet.query=')
     var solrQuery = "http://da-prod-solr8.library.cornell.edu/solr/ld4p2-blacklight/select?indent=on&wt=json&rows=0&q=*.*&facet=true" + facetList
     $.ajax({ // would be nice to pull url from env var rather than directly include it in code
