@@ -1,0 +1,54 @@
+38128, 141247863, http://www.wikidata.org/entity/Q4967307, Brigham Young: American Moses
+27350, 69980, http://www.wikidata.org/entity/Q4769320, Annie John
+32413, 196780053, http://www.wikidata.org/entity/Q973883, Lonesome Dove
+38899, 54682621, http://www.wikidata.org/entity/Q4656053, A Comprehensive Grammar of the English Language
+139606, 1487955, http://www.wikidata.org/entity/Q5862897, Flora of the Cape Peninsula
+81610, 1619108, http://www.wikidata.org/entity/Q7734479, The Flivver King
+422319, 183696, http://www.wikidata.org/entity/Q752584, Mrs Dalloway
+218557, 412753, http://www.wikidata.org/entity/Q7767330, The Sun Chemist
+82127, 781199, http://www.wikidata.org/entity/Q7458481, Sex and the Single Girl
+149357, 413955, http://www.wikidata.org/entity/Q4145994, Aspects of the Novel
+84987, 475516287, http://www.wikidata.org/entity/Q7731631, The Egg Tree
+81483, 3107281, http://www.wikidata.org/entity/Q3818983, Bard: The Odyssey of the Irish
+74239, 20555753, http://www.wikidata.org/entity/Q5245286, Dead Man's Ransom
+54383, 57892126, http://www.wikidata.org/entity/Q3878871, Nights at the Circus
+97708, 462285, http://www.wikidata.org/entity/Q7757917, The Power Broker
+39991, 3917402, http://www.wikidata.org/entity/Q5693175, Heat
+264314, 1609717, http://www.wikidata.org/entity/Q7755346, The Origin of Birds
+46804, 48446512, http://www.wikidata.org/entity/Q1042294, So Long, and Thanks for All the Fish
+151709, 786175, http://www.wikidata.org/entity/Q8199988, The Clue in the Diary
+37737, 683986, http://www.wikidata.org/entity/Q3997970, When the Bough Breaks
+54676, 234990675, http://www.wikidata.org/entity/Q43558861, The electromagnetic field
+189893, 9262123, http://www.wikidata.org/entity/Q1444052, Go Tell It on the Mountain
+256747, 3115, http://www.wikidata.org/entity/Q899334, The Tin Drum
+69920, 1007972, http://www.wikidata.org/entity/Q7754764, The Ogre Downstairs
+86540, 1305002, http://www.wikidata.org/entity/Q7747570, The Little Bookroom
+58377, 33483202, http://www.wikidata.org/entity/Q4186785, Sitti Nurbaya
+48002, 15006, http://www.wikidata.org/entity/Q7739491, The Hero and the Crown
+234462, 199194273, http://www.wikidata.org/entity/Q4691050, Against Method
+222573, 3199716, http://www.wikidata.org/entity/Q7095043, Ontogeny and Phylogeny
+97098, 1836899, http://www.wikidata.org/entity/Q18162812, The Sacred and Profane Love Machine
+240741, 292467293, http://www.wikidata.org/entity/Q14479917, Ways of Seeing
+243287, 81364, http://www.wikidata.org/entity/Q5158428, Concepts of Modern Mathematics
+76137, 54243621, http://www.wikidata.org/entity/Q3716084, The Ionian Mission
+255034, 1850618, http://www.wikidata.org/entity/Q7064396, Novae Hollandiae Plantarum Specimen
+63907, 17295, http://www.wikidata.org/entity/Q135515, The Sound and the Fury
+10775, 384119, http://www.wikidata.org/entity/Q5255573, The Hunt for Red October
+20145, 5020830, http://www.wikidata.org/entity/Q7730751, The Doubleman
+153018, 2078122, http://www.wikidata.org/entity/Q3887148, Octaedro
+144692, 2245742, http://www.wikidata.org/entity/Q16873775, Compendium florae Philadelphicae
+374488, 420526, http://www.wikidata.org/entity/Q2079221, Genetics and the Origin of Species
+205291, 414131, http://www.wikidata.org/entity/Q7782425, Theory of Literature
+407682, 1863833103, http://www.wikidata.org/entity/Q7736096, The Genetical Theory of Natural Selection
+413136, 403438, http://www.wikidata.org/entity/Q3428339, The Long Winter
+233900, 416480, http://www.wikidata.org/entity/Q38228360, Witchcraft, oracles, and magic among the Azande
+147442, 197683934, http://www.wikidata.org/entity/Q6437544, Krishnamurti: The Years of Fulfilment
+59655, 231309167, http://www.wikidata.org/entity/Q7722565, The Chinese Language: Fact and Fantasy
+97098, 1836899, http://www.wikidata.org/entity/Q18162812, The Sacred and Profane Love Machine
+251410, 197508628, http://www.wikidata.org/entity/Q30564730, Two Centuries of American Medicine, 1776-1976
+207674, 196933040, http://www.wikidata.org/entity/Q7044569, No More Parades
+147286, 287322374, http://www.wikidata.org/entity/Q28113128, Q28113128
+413129, 403436, http://www.wikidata.org/entity/Q7173181, Little House in the Big Woods
+278580, 6538382, http://www.wikidata.org/entity/Q7617096, Still Life with Woodpecker
+53215, 81669, http://www.wikidata.org/entity/Q4743917, American Government
+73225, 3820113, http://www.wikidata.org/entity/Q7679034, Talbot Mundy: Messenger of Destiny
