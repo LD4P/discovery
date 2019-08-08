@@ -17,6 +17,8 @@ log/*
 tmp/*
 /related-searches/tmp
 /related-searches/log
+*.log
+*.cache
 
 !*/log/.keep
 !*/tmp/.keep
