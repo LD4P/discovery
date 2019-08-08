@@ -127,9 +127,3 @@
 [2019-07-12T12:39:51 (process) #16761][INFO] Not starting, not active for development
 [2019-07-12T12:41:51 (process) #16865][INFO] appsignal: Loading Rails (4.2.11) integration
 [2019-07-12T12:41:55 (process) #16865][INFO] Not starting, not active for development
-[2019-07-24T10:04:24 (process) #3484][INFO] appsignal: Loading Rails (4.2.11) integration
-[2019-07-24T10:04:46 (process) #3484][INFO] Not starting, not active for development
-[2019-07-24T10:07:44 (process) #3825][INFO] appsignal: Loading Rails (4.2.11) integration
-[2019-07-24T10:07:59 (process) #3825][INFO] Not starting, not active for development
-[2019-07-24T10:11:39 (process) #3859][INFO] appsignal: Loading Rails (4.2.11) integration
-[2019-07-24T10:11:57 (process) #3859][INFO] Not starting, not active for development
