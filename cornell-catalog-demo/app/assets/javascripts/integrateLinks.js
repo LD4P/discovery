@@ -147,7 +147,8 @@ $(document).ready(function() {
 				if(wikidataURI != null) {
 					getImage(wikidataURI);
 					getNotableWorks(wikidataURI);
-					getInfluencedBy(wikidataURI);
+					getPeopleInfluencedBy(wikidataURI);
+					getPeopleWhoInfluenced(wikidataURI);
 				}
 				
 
@@ -235,10 +236,10 @@ $(document).ready(function() {
 		});
 	}
 	
-	//Wikidata influenced by
-	function getInfluencedBy(wikidataURI){
+	//Wikidata people who influenced the current author
+	function getPeopleInfluencedBy(wikidataURI){
 		var wikidataEndpoint = "https://query.wikidata.org/sparql?";
-		var sparqlQuery = "SELECT ?influencedBy ?influencedByLabel WHERE {?influencedBy wdt:P737 <" + wikidataURI + "> . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } }";
+		var sparqlQuery = "SELECT ?influenceFor ?influenceForLabel WHERE {?influenceFor wdt:P737 <" + wikidataURI + "> . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } }";
 	
 		$.ajax({
 			url : wikidataEndpoint,
@@ -249,26 +250,22 @@ $(document).ready(function() {
 				query : sparqlQuery
 			},
 			success : function(data) {
-				
-				console.log("Influenced By ");
-				console.log(data);
 				if (data && "results" in data
 						&& "bindings" in data["results"]) {
 					var bindings = data["results"]["bindings"];
 					var bLength = bindings.length;
 					var b;
 					if (bindings.length) {
-						var notableWorksHtml = "<div>Influenced: ";
+						var notableWorksHtml = "<div>Was influence for: ";
 						var notableHtmlArray = [];
 						for(b = 0; b < bLength; b++) {
 							var binding = bindings[b];
-							if ("influencedBy" in binding
-									&& "value" in binding["influencedBy"] 
-									&& "influencedByLabel" in binding 
-									&& "value" in binding["influencedByLabel"]) {
-								var iURI = binding["influencedBy"]["value"];
-								var iLabel = binding["influencedByLabel"]["value"];
-								console.log("uri and label for influenced  " + iURI + ":" + iLabel);
+							if ("influenceFor" in binding
+									&& "value" in binding["influenceFor"] 
+									&& "influenceForLabel" in binding 
+									&& "value" in binding["influenceForLabel"]) {
+								var iURI = binding["influenceFor"]["value"];
+								var iLabel = binding["influenceForLabel"]["value"];
 								notableHtmlArray.push("<a href='iURI'>" + iLabel + "</a>");
 							}
 						}
@@ -280,6 +277,49 @@ $(document).ready(function() {
 
 		});
 	}
+
+	//Wikidata author influenced these people
+	function getPeopleWhoInfluenced(wikidataURI){
+		var wikidataEndpoint = "https://query.wikidata.org/sparql?";
+		var sparqlQuery = "SELECT ?influencedBy ?influencedByLabel WHERE {<" + wikidataURI + "> wdt:P737 ?influencedBy . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } }";
+	
+		$.ajax({
+			url : wikidataEndpoint,
+			headers : {
+				Accept : 'application/sparql-results+json'
+			},
+			data : {
+				query : sparqlQuery
+			},
+			success : function(data) {
+				if (data && "results" in data
+						&& "bindings" in data["results"]) {
+					var bindings = data["results"]["bindings"];
+					var bLength = bindings.length;
+					var b;
+					if (bindings.length) {
+						var notableWorksHtml = "<div>Was influenced by: ";
+						var notableHtmlArray = [];
+						for(b = 0; b < bLength; b++) {
+							var binding = bindings[b];
+							if ("influencedBy" in binding
+									&& "value" in binding["influencedBy"] 
+									&& "influencedByLabel" in binding 
+									&& "value" in binding["influencedByLabel"]) {
+								var iURI = binding["influencedBy"]["value"];
+								var iLabel = binding["influencedByLabel"]["value"];
+								notableHtmlArray.push("<a href='iURI'>" + iLabel + "</a>");
+							}
+						}
+						notableWorksHtml += notableHtmlArray.join(", ") + "</div>";
+						$("#wikidataContent").append(notableWorksHtml);
+					}
+				}
+			}
+
+		});
+	}
+
 	//Get Image
 	function getImage(wikidataURI){
 		var wikidataEndpoint = "https://query.wikidata.org/sparql?";
