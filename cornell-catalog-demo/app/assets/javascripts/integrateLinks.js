@@ -235,6 +235,16 @@ $(document).ready(function() {
 
 		});
 	}
+
+	function lastNameSorter(a, b) {
+		// divide each combined name, by spaces, into an array of names
+		var a_names = a.split(' '); 
+		var b_names = b.split(' ');
+		// sort the array by last name
+		if (a_names[a_names.length-1] < b_names[b_names.length-1]) return -1;
+		if (a_names[a_names.length-1] > b_names[b_names.length-1]) return 1;
+		return 0;
+	}
 	
 	//Wikidata people who influenced the current author
 	function getPeopleInfluencedBy(wikidataURI){
@@ -269,6 +279,7 @@ $(document).ready(function() {
 								notableHtmlArray.push("<a href='iURI'>" + iLabel + "</a>");
 							}
 						}
+						notableHtmlArray.sort(lastNameSorter);
 						notableWorksHtml += notableHtmlArray.join(", ") + "</div>";
 						$("#wikidataContent").append(notableWorksHtml);
 					}
@@ -311,6 +322,7 @@ $(document).ready(function() {
 								notableHtmlArray.push("<a href='iURI'>" + iLabel + "</a>");
 							}
 						}
+						notableHtmlArray.sort(lastNameSorter);
 						notableWorksHtml += notableHtmlArray.join(", ") + "</div>";
 						$("#wikidataContent").append(notableWorksHtml);
 					}
