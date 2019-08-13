@@ -193,7 +193,7 @@ $(document).ready(function() {
 	//Wikidata notable works
 	function getNotableWorks(wikidataURI){
 		var wikidataEndpoint = "https://query.wikidata.org/sparql?";
-		var sparqlQuery = "SELECT ?notable_work ?title WHERE {<" + wikidataURI + "> wdt:P800 ?notable_work. ?notable_work wdt:P1476 ?title. }";
+		var sparqlQuery = "SELECT ?notable_work ?title WHERE {<" + wikidataURI + "> wdt:P800 ?notable_work. ?notable_work wdt:P1476 ?title. ?notable_work wikibase:sitelinks ?linkcount . } ORDER BY DESC(?linkcount)";
 	
 		$.ajax({
 			url : wikidataEndpoint,
