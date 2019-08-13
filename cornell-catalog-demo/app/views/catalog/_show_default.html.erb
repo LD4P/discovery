@@ -18,7 +18,7 @@
               <% end %>
               <%# show heading popover for everything bigger than smartphone %>
 	          <a href='#' role="button" tabindex = "0" base-url="<%= root_url %>" data-auth=type='author' data-auth='<%=search %>' datasearch-poload='/browse/info?authq=<%=  search %>&amp;browse_type=Author&amp;headingtype=<%=  type %>' id="info" class="info-button hidden-xs"><span class="label label-info">
-	            Info
+	            i
 	          </span>
 	          </a>
 	          <%# link directly to heading on smartphone %>
@@ -39,11 +39,22 @@
 	        <% end %>
           <% end %>
         <% elsif  solr_fname == 'subject_json'-%> 
-           <%= render_clickable_document_show_field_value :document => document, :field => solr_fname %>       
             <% authname = field_value solr_fname %>
 	          <% document['subject_json'].each do |subjectArray| %>
 	            <% subjects = JSON.parse(subjectArray) %>
+	            <%#= render_clickable_document_show_field_value :value => subjectArray, :document => document, :field => solr_fname -%> 
+	            <% indent = 0 %>
+	            <div>      	                
 	            <% subjects.each do |heading| %>
+	                <% styleText = "" %>
+	                <% if indent > 0 %>
+	                  <% styleText = "margin-left:" + indent.to_s + "px;" %>    
+	                <% end %>  	
+	                <% indent += 10 %>
+	                <div style="<%= styleText %>"                	                
+	                <% headingArray = [] %>
+	                <% headingArray << heading %>
+	                <%= render_clickable_document_show_field_value :value => JSON.generate(headingArray), :document => document, :field => solr_fname %>       	                
 		            <% if heading.key?("authorized") && heading["authorized"] == true %> 
 		              <% type = heading['type']  %>
 		              <% if heading['subject'].present?  %>
@@ -51,11 +62,13 @@
 		              <% end %>
 		              <%# show heading popover for everything bigger than smartphone %>
 			          <a href='#' role="button" tabindex = "0" base-url="<%= root_url %>" data-auth-type='subject' data-auth='<%=search %>' datasearch-poload='/browse/info?authq=<%=  search %>&amp;browse_type=Subject&amp;headingtype=<%=  type %>' id="info" class="info-button hidden-xs"><span class="label label-info">
-			            Info
+			            i
 			          </span>
 			          </a>
 			        <% end %>
+			        </div>
 		        <% end %>
+		        </div>
 	          <% end %>   
         <% elsif display_link? solr_fname -%>   
            <%= render_display_link :document => document, :field => solr_fname %>
