@@ -147,6 +147,7 @@ $(document).ready(function() {
 				if(wikidataURI != null) {
 					getImage(wikidataURI);
 					getNotableWorks(wikidataURI);
+					getInfluenced(wikidataURI);
 					getInfluencedBy(wikidataURI);
 				}
 				
@@ -235,10 +236,10 @@ $(document).ready(function() {
 		});
 	}
 	
-	//Wikidata influenced by
-	function getInfluencedBy(wikidataURI){
+	//Wikidata influenced
+	function getInfluenced(wikidataURI){
 		var wikidataEndpoint = "https://query.wikidata.org/sparql?";
-		var sparqlQuery = "SELECT ?influencedBy ?influencedByLabel WHERE {?influencedBy wdt:P737 <" + wikidataURI + "> . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } }";
+		var sparqlQuery = "SELECT ?influenced ?influencedLabel WHERE {?influenced wdt:P737 <" + wikidataURI + "> . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } }";
 	
 		$.ajax({
 			url : wikidataEndpoint,
@@ -249,9 +250,6 @@ $(document).ready(function() {
 				query : sparqlQuery
 			},
 			success : function(data) {
-				
-				console.log("Influenced By ");
-				console.log(data);
 				if (data && "results" in data
 						&& "bindings" in data["results"]) {
 					var bindings = data["results"]["bindings"];
@@ -259,6 +257,49 @@ $(document).ready(function() {
 					var b;
 					if (bindings.length) {
 						var notableWorksHtml = "<div>Influenced: ";
+						var notableHtmlArray = [];
+						for(b = 0; b < bLength; b++) {
+							var binding = bindings[b];
+							if ("influenced" in binding
+									&& "value" in binding["influenced"] 
+									&& "influencedLabel" in binding 
+									&& "value" in binding["influencedLabel"]) {
+								var iURI = binding["influenced"]["value"];
+								var iLabel = binding["influencedLabel"]["value"];
+								console.log("uri and label for influenced  " + iURI + ":" + iLabel);
+								notableHtmlArray.push("<a href='iURI'>" + iLabel + "</a>");
+							}
+						}
+						notableWorksHtml += notableHtmlArray.join(", ") + "</div>";
+						$("#wikidataContent").append(notableWorksHtml);
+					}
+				}
+			}
+
+		});
+	}
+
+	//Wikidata influenced by
+	function getInfluencedBy(wikidataURI){
+		var wikidataEndpoint = "https://query.wikidata.org/sparql?";
+		var sparqlQuery = "SELECT ?influencedBy ?influencedByLabel WHERE {<" + wikidataURI + "> wdt:P737 ?influencedBy . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } }";
+	
+		$.ajax({
+			url : wikidataEndpoint,
+			headers : {
+				Accept : 'application/sparql-results+json'
+			},
+			data : {
+				query : sparqlQuery
+			},
+			success : function(data) {
+				if (data && "results" in data
+						&& "bindings" in data["results"]) {
+					var bindings = data["results"]["bindings"];
+					var bLength = bindings.length;
+					var b;
+					if (bindings.length) {
+						var notableWorksHtml = "<div>Influenced by: ";
 						var notableHtmlArray = [];
 						for(b = 0; b < bLength; b++) {
 							var binding = bindings[b];
@@ -280,6 +321,7 @@ $(document).ready(function() {
 
 		});
 	}
+
 	//Get Image
 	function getImage(wikidataURI){
 		var wikidataEndpoint = "https://query.wikidata.org/sparql?";
