@@ -17,7 +17,7 @@
               <% else search = heading['search1']  %>
               <% end %>
               <%# show heading popover for everything bigger than smartphone %>
-	          <a href='#' role="button" tabindex = "0" base-url="<%= root_url %>" data-auth='<%=search %>' datasearch-poload='/browse/info?authq=<%=  search %>&amp;browse_type=Author&amp;headingtype=<%=  type %>' id="info" class="info-button hidden-xs"><span class="label label-info">
+	          <a href='#' role="button" tabindex = "0" base-url="<%= root_url %>" data-auth=type='author' data-auth='<%=search %>' datasearch-poload='/browse/info?authq=<%=  search %>&amp;browse_type=Author&amp;headingtype=<%=  type %>' id="info" class="info-button hidden-xs"><span class="label label-info">
 	            Info
 	          </span>
 	          </a>
@@ -38,6 +38,25 @@
 		      <% end %>
 	        <% end %>
           <% end %>
+        <% elsif  solr_fname == 'subject_json'-%> 
+           <%= render_clickable_document_show_field_value :document => document, :field => solr_fname %>       
+            <% authname = field_value solr_fname %>
+	          <% document['subject_json'].each do |subjectArray| %>
+	            <% subjects = JSON.parse(subjectArray) %>
+	            <% subjects.each do |heading| %>
+		            <% if heading.key?("authorized") && heading["authorized"] == true %> 
+		              <% type = heading['type']  %>
+		              <% if heading['subject'].present?  %>
+		                <% search = heading['subject'] %>
+		              <% end %>
+		              <%# show heading popover for everything bigger than smartphone %>
+			          <a href='#' role="button" tabindex = "0" base-url="<%= root_url %>" data-auth-type='subject' data-auth='<%=search %>' datasearch-poload='/browse/info?authq=<%=  search %>&amp;browse_type=Subject&amp;headingtype=<%=  type %>' id="info" class="info-button hidden-xs"><span class="label label-info">
+			            Info
+			          </span>
+			          </a>
+			        <% end %>
+		        <% end %>
+	          <% end %>   
         <% elsif display_link? solr_fname -%>   
            <%= render_display_link :document => document, :field => solr_fname %>
         <% elsif display_clickable? solr_fname -%>

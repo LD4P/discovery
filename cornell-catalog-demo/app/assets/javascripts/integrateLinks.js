@@ -10,6 +10,8 @@ $(document).ready(function() {
 				auth = auth.replace(/,\s*$/, "");
 				//Also periods
 				auth = auth.replace(/.\s*$/, "");
+				var authType = e.attr("data-auth-type");
+				var catalogAuthURL = e.attr("datasearch-poload");
 				//Set up container
 				var contentHtml = "<div id='popoverContent'><div id='wikidataContent'></div><div id='digitalCollectionsContent'></div></div>";
         e.popover(
@@ -18,31 +20,39 @@ $(document).ready(function() {
                 html : true,
                 trigger : 'focus'
             }).popover('show');
+        
 				//
-				var lookupURL = "http://id.loc.gov/authorities/names/suggest/?q="
-					+ auth
-					+ "&rdftype=PersonalName&count=1";
-				// Copied from original bfe example
-				
-				$
-				.ajax({
-					url : lookupURL,
-					dataType : 'jsonp',
-					success : function(data) {
-						urisArray = parseLOCSuggestions(data);
-						if (urisArray
-								&& urisArray.length) {
-							var locURI = urisArray[0]; // Pick
-							// first
-							// one
-							console.log("LOC URI is "+ locURI);
-							queryWikidata(locURI, e);
-						}
-					}
-				});
-				
-				//Add query to lookup digital collections
-				searchDigitalCollections(baseUrl, auth);
+        if(authType == "author") {
+  				var lookupURL = "http://id.loc.gov/authorities/names/suggest/?q="
+  					+ auth
+  					+ "&rdftype=PersonalName&count=1";
+  				// Copied from original bfe example
+  				
+  				$
+  				.ajax({
+  					url : lookupURL,
+  					dataType : 'jsonp',
+  					success : function(data) {
+  						urisArray = parseLOCSuggestions(data);
+  						if (urisArray
+  								&& urisArray.length) {
+  							var locURI = urisArray[0]; // Pick
+  							// first
+  							// one
+  							console.log("LOC URI is "+ locURI);
+  							queryWikidata(locURI, e);
+  						}
+  					}
+  				});
+  				
+  				//Add query to lookup digital collections
+  				searchDigitalCollections(baseUrl, auth);
+        } else {
+          $.get(catalogAuthURL,function(d) {
+            //e.popover({content: d, html:true, trigger:'focus'}).popover('show');
+            $("#popoverContent").append(d);
+          });
+        }
 			});
 
 	
