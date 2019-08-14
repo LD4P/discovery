@@ -1,7 +1,7 @@
 $(document).ready(function() {
 	//getDerivativeWorks();
 	//getEditions();
-	$('*[data-auth]').click(
+	$(this).on('click', '*[data-auth]',
 			function() {
 				var e = $(this);
 				e.off('click');
