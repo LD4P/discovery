@@ -140,9 +140,9 @@ $(document).ready(function() {
 				var authorLabel = wikidataParsedData['authorLabel'];
 				// Do a popover here with the wikidata uri and the loc uri
 				//if no wikidata uri then will just show null
-				var contentHtml = "<div class=\"kp-flexrow\"><figure class=\"kp-entity-image\"></figure><div><h3>" 
+				var contentHtml = "<section class=\"kp-flexrow\"><figure class=\"kp-entity-image\"></figure><div><h3>" 
 				+ authorLabel +
-				"</h3><div class=\"kp-source\">Source: Wikidata</div><div></div>";
+				"</h3><span class=\"kp-source\">Source: Wikidata</span></div></section>";
 				$("#wikidataContent").append(contentHtml);
 				//Get notable results
 				if(wikidataURI != null) {
@@ -159,30 +159,23 @@ $(document).ready(function() {
 
 	}
 
-	// function to parse sparql query results from wikidata
+	// function to parse sparql query results from wikidata, getting URI and author name
 	function parseWikidataSparqlResults(data) {
-		// get URI and author name from data
+		output = {}
 		if (data && "results" in data
 				&& "bindings" in data["results"]) {
 			var bindings = data["results"]["bindings"];
 			if (bindings.length) {
 				var binding = bindings[0];
 				if ("entity" in binding && "value" in binding["entity"]) {
-					var uriValue = binding["entity"]["value"];
+					output.uriValue = binding["entity"]["value"];
 				}
 				if ("entityLabel" in binding && "value" in binding["entityLabel"]) {
-					var authorLabel = binding["entityLabel"]["value"];
+					output.authorLabel = binding["entityLabel"]["value"];
 				}
 			}
 		}
-		// return only what was found
-		if (authorLabel && uriValue) {
-			return {uriValue: uriValue, authorLabel: authorLabel};
-		} else if (uriValue) {
-			return {uriValue: uriValue, authorLabel: null};
-		} else {
-			return null;
-		}
+		return output;
 	}
 
 	//function to get localname from LOC URI
