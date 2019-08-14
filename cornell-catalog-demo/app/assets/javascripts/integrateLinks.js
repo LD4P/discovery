@@ -63,8 +63,7 @@ $(document).ready(function() {
            results = data["response"]["docs"];
            //iterate through array
            var resultsHtml = "<div><ul class=\"explist-digitalresults\">";
-           var authorsHtml ="<div><ul class=\"explist-digitalcontributers\">";
-           var authorsHtmlArray = [];
+           var authorsHtml = "<div><ul class=\"explist-digitalcontributers\">";
            var maxLen = 10;
            var len = results.length;
            if(len > maxLen) len = maxLen;
@@ -88,9 +87,8 @@ $(document).ready(function() {
                }
              }
            }
-           
-  
-           resultsHtml += "</li></ul><button id=\"expnext-digitalresults\">&#x25BD; more</button></div>";
+
+           resultsHtml += "</ul><button id=\"expnext-digitalresults\">&#x25BD; more</button></div>";
            var displayHtml = "<div><h4>Digital Collections Results</h4>" + 
            resultsHtml + "<h4>Related Digital Collections Contributors</h4>" + 
            authorsHtml + "</ul><button id=\"expnext-digitalcontributers\">&#x25BD; more</button></div>";
