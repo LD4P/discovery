@@ -1,22 +1,22 @@
+// Knowledge Panel JS code
+
 $(document).ready(function() {
 	//getDerivativeWorks();
 	//getEditions();
 	$('*[data-auth]').click(
-			function() {
-				var e = $(this);
-				e.off('click');
-				var baseUrl = e.attr("base-url")
-				var auth = e.attr("data-auth");
-				auth = auth.replace(/,\s*$/, "");
-				//Also periods
-				auth = auth.replace(/.\s*$/, "");
-				//Set up container
-				var contentHtml = "<div id='popoverContent'><div id='wikidataContent'></div><div id='digitalCollectionsContent'></div></div>";
+		function() {
+			var e = $(this);
+			var baseUrl = e.attr("base-url")
+			var auth = e.attr("data-auth");
+			auth = auth.replace(/,\s*$/, "");
+			//Also periods
+			auth = auth.replace(/.\s*$/, "");
+			//Set up container
+			var contentHtml = "<div id='popoverContent'><div id='wikidataContent'></div><div id='digitalCollectionsContent'></div></div>";
         e.popover(
             {
               content : contentHtml,
-                html : true,
-                trigger : 'focus'
+              html : true,
             }).popover('show');
 				//
 				var lookupURL = "http://id.loc.gov/authorities/names/suggest/?q="
@@ -213,7 +213,7 @@ $(document).ready(function() {
 					var bLength = bindings.length;
 					var b;
 					if (bindings.length) {
-						var notableWorksHtml = "<div>Notable Works: ";
+						var notableWorksHtml = "<div class=\"wrapper\"><h4>Notable Works</h4><ul class=\"explist\"><li>";
 						var notableHtmlArray = [];
 						for(b = 0; b < bLength; b++) {
 							var binding = bindings[b];
@@ -227,10 +227,11 @@ $(document).ready(function() {
 								notableHtmlArray.push("<a href='" + notableWorkURI + "'>" + notableWorkLabel + "</a>");
 							}
 						}
-						notableWorksHtml += notableHtmlArray.join(", ") + "</div>";
+						notableWorksHtml += notableHtmlArray.join("</li><li>") + "</li></ul><button id=\"expnext\">Show More</button></div>";
 						$("#wikidataContent").append(notableWorksHtml);
 					}
 				}
+				listExpander();
 			}
 
 		});
@@ -257,7 +258,7 @@ $(document).ready(function() {
 					var bLength = bindings.length;
 					var b;
 					if (bindings.length) {
-						var notableWorksHtml = "<div>Was influence for: ";
+						var notableWorksHtml = "<div><h4>Was influence for</h4><ul><li>";
 						var notableHtmlArray = [];
 						for(b = 0; b < bLength; b++) {
 							var binding = bindings[b];
@@ -270,7 +271,7 @@ $(document).ready(function() {
 								notableHtmlArray.push("<a href='iURI'>" + iLabel + "</a>");
 							}
 						}
-						notableWorksHtml += notableHtmlArray.join("; ") + "</div>";
+						notableWorksHtml += notableHtmlArray.join("</li><li>") + "</li></ul></div>";
 						$("#wikidataContent").append(notableWorksHtml);
 					}
 				}
@@ -300,7 +301,7 @@ $(document).ready(function() {
 					var bLength = bindings.length;
 					var b;
 					if (bindings.length) {
-						var notableWorksHtml = "<div>Was influenced by: ";
+						var notableWorksHtml = "<div><h4>Was influenced by</h4><ul><li>";
 						var notableHtmlArray = [];
 						for(b = 0; b < bLength; b++) {
 							var binding = bindings[b];
@@ -313,7 +314,7 @@ $(document).ready(function() {
 								notableHtmlArray.push("<a href='iURI'>" + iLabel + "</a>");
 							}
 						}
-						notableWorksHtml += notableHtmlArray.join("; ") + "</div>";
+						notableWorksHtml += notableHtmlArray.join("</li><li>") + "</li></ul></div>";
 						$("#wikidataContent").append(notableWorksHtml);
 					}
 				}
@@ -467,4 +468,36 @@ $(document).ready(function() {
 	//?Also potentially selected co-author relationships?
 	
 
+});
+
+// Workings of "show more" links on knowledge panel lists
+function listExpander(){
+  var list = $(".explist li");
+  var numToShow = 3;
+  var button = $("#expnext");
+  var numInList = list.length;
+  list.hide();
+  if (numInList > numToShow) {
+    button.show();
+  }
+  list.slice(0, numToShow).show();
+
+  button.click(function(){
+    var showing = list.filter(':visible').length;
+    list.slice(showing - 1, showing + numToShow).fadeIn();
+    var nowShowing = list.filter(':visible').length;
+    if (nowShowing >= numInList) {
+      button.hide();
+    }
+  });
+};
+
+// Close popover when clicking outside
+$(document).mouseup(function (e) {
+  var container = $(".popover");
+  if (!container.is(e.target)
+    && container.has(e.target).length === 0) 
+  {
+    container.popover("hide");
+  }
 });
