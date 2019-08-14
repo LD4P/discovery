@@ -427,6 +427,9 @@ def display_subject_headings(value, sep_index, sep_display, args)
         indent += 10
         style_text = "margin-left:" + indent.to_s + "px;"
       	json_value += sep_index + v
+      	#type = "Topical Term"
+      	#What particular type will work in library seems up in the air, so leave empty and get all content ack
+      	type = ""
       else
         type = sub["type"]
       	json_value += v
@@ -438,8 +441,8 @@ def display_subject_headings(value, sep_index, sep_display, args)
         	headingtype = '&amp;headingtype=' + type
         end
       	info_button = '<a href="#" role="button" tabindex = "0" base-url="' + request.base_url + 
-      	'" data-auth-type="subject" data-auth="' + v + '" datasearch-poload="/browse/info?authq=' + 
-      	v + '&amp;browse_type=Subject' + headingtype + '" id="info" class="info-button hidden-xs"><span class="label label-info">' + 
+      	'" data-auth-type="subject" heading-type="' + type + '" data-auth="' + json_value + '" datasearch-poload="/browse/info?authq=' + 
+      	json_value + '&amp;browse_type=Subject' + headingtype + '" id="info" class="info-button hidden-xs"><span class="label label-info">' + 
 		'i</span></a>'
       end
       

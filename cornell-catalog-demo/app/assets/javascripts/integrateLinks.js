@@ -6,12 +6,16 @@ $(document).ready(function() {
         e.off('click');
         event.preventDefault();
         //var baseUrl = e.attr("base-url")
-        var baseUrl = $("#itemDetails").attr("base-url")
-        var auth = e.attr("data-auth");
-        auth = auth.replace(/,\s*$/, "");
+        var baseUrl = $("#itemDetails").attr("base-url");
         console.log("base url " + baseUrl);
+        var auth = e.attr("data-auth");
+        var headingType = e.attr("heading-type");
+        console.log("Auth value is " + auth);
+        auth = auth.replace(/,\s*$/, "");
+        console.log("After replacing comma " + auth);
         //Also periods
-        auth = auth.replace(/.\s*$/, "");
+        auth = auth.replace(/\.\s*$/, "");
+        console.log("Auth after replacing period " + auth);
         var authType = e.attr("data-auth-type");
         console.log("Authorization type is " + authType);
         var catalogAuthURL = e.attr("datasearch-poload");
@@ -27,32 +31,46 @@ $(document).ready(function() {
         $.get(catalogAuthURL,function(d) {
           $("#authContent").append(d);
         });
-        if(authType == "author") {
-          var lookupURL = "http://id.loc.gov/authorities/names/suggest/?q="
-            + auth
-            + "&rdftype=PersonalName&count=1";
-          // Copied from original bfe example
-          
-          $
-          .ajax({
-            url : lookupURL,
-            dataType : 'jsonp',
-            success : function(data) {
-              urisArray = parseLOCSuggestions(data);
-              if (urisArray
-                  && urisArray.length) {
-                var locURI = urisArray[0]; // Pick
-                // first
-                // one
-                console.log("LOC URI is "+ locURI);
-                queryWikidata(locURI, e);
-              }
+        locPath = "names";
+        rdfType = "PersonalName";
+        //Even though LCSH has person names, querying /subjects for names won't get you main resource
+        //TODO: look into id.loc.gov/authorities/names/label/[label]
+        //for subject, LOC query will replace > with --
+        //Digital collections will just use space for now
+        var locQuery = auth;
+        var digitalQuery = auth;
+        if(authType == "subject") {
+          if(headingType != "Personal Name") {       
+            locPath = "subjects";
+            rdfType = "(Topic OR rdftype:ComplexSubject)";
+          }
+          locQuery = locQuery.replace(/\s>\s/g,"--");
+          digitalQuery = digitalQuery.replace(/>/g," ");
+        }
+        var lookupURL = "http://id.loc.gov/authorities/" + locPath + "/suggest/?q="
+          + locQuery
+          + "&rdftype=" + rdfType + "&count=1";
+        // Copied from original bfe example
+        
+        $
+        .ajax({
+          url : lookupURL,
+          dataType : 'jsonp',
+          success : function(data) {
+            urisArray = parseLOCSuggestions(data);
+            if (urisArray
+                && urisArray.length) {
+              var locURI = urisArray[0]; // Pick
+              // first
+              // one
+              console.log("LOC URI is "+ locURI);
+              queryWikidata(locURI, e);
             }
-          });
-        } 
+          }
+        });
         
         //Add query to lookup digital collections
-        searchDigitalCollections(baseUrl, auth);
+        searchDigitalCollections(baseUrl, digitalQuery);
       });
 
   
