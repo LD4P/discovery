@@ -213,7 +213,7 @@ $(document).ready(function() {
 					var bLength = bindings.length;
 					var b;
 					if (bindings.length) {
-						var notableWorksHtml = "<div class=\"wrapper\"><h4>Notable Works</h4><ul class=\"explist\"><li>";
+						var notableWorksHtml = "<div><h4>Notable Works</h4><ul class=\"explist-notable\"><li>";
 						var notableHtmlArray = [];
 						for(b = 0; b < bLength; b++) {
 							var binding = bindings[b];
@@ -227,11 +227,11 @@ $(document).ready(function() {
 								notableHtmlArray.push("<a href='" + notableWorkURI + "'>" + notableWorkLabel + "</a>");
 							}
 						}
-						notableWorksHtml += notableHtmlArray.join("</li><li>") + "</li></ul><button id=\"expnext\">Show More</button></div>";
+						notableWorksHtml += notableHtmlArray.join("</li><li>") + "</li></ul><button id=\"expnext-notable\">Show More</button></div>";
 						$("#wikidataContent").append(notableWorksHtml);
 					}
 				}
-				listExpander();
+				listExpander('notable');
 			}
 
 		});
@@ -258,7 +258,7 @@ $(document).ready(function() {
 					var bLength = bindings.length;
 					var b;
 					if (bindings.length) {
-						var notableWorksHtml = "<div><h4>Was influence for</h4><ul><li>";
+						var notableWorksHtml = "<div><h4>Was influence for</h4><ul class=\"explist-influencedby\"><li>";
 						var notableHtmlArray = [];
 						for(b = 0; b < bLength; b++) {
 							var binding = bindings[b];
@@ -271,10 +271,11 @@ $(document).ready(function() {
 								notableHtmlArray.push("<a href='iURI'>" + iLabel + "</a>");
 							}
 						}
-						notableWorksHtml += notableHtmlArray.join("</li><li>") + "</li></ul></div>";
+						notableWorksHtml += notableHtmlArray.join("</li><li>") + "</li></ul><button id=\"expnext-influencedby\">Show More</button></div>";
 						$("#wikidataContent").append(notableWorksHtml);
 					}
 				}
+				listExpander('influencedby');
 			}
 
 		});
@@ -471,10 +472,10 @@ $(document).ready(function() {
 });
 
 // Workings of "show more" links on knowledge panel lists
-function listExpander(){
-  var list = $(".explist li");
+function listExpander(domString){
+  var list = $(".explist-" + domString + " li");
   var numToShow = 3;
-  var button = $("#expnext");
+  var button = $("#expnext-" + domString);
   var numInList = list.length;
   list.hide();
   if (numInList > numToShow) {
@@ -491,6 +492,7 @@ function listExpander(){
     }
   });
 };
+
 
 // Close popover when clicking outside
 $(document).mouseup(function (e) {
