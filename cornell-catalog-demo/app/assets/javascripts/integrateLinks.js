@@ -2,9 +2,10 @@ $(document).ready(function() {
   //getDerivativeWorks();
   //getEditions();
   $('*[data-auth]').click(
-      function() {
+      function(event) {
         var e = $(this);
         e.off('click');
+        event.preventDefault();
         var baseUrl = e.attr("base-url")
         var auth = e.attr("data-auth");
         auth = auth.replace(/,\s*$/, "");

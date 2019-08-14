@@ -333,19 +333,8 @@ end
             link_to(v, add_search_params(args[:field], '"' + hierarchical_value + '"'), class: "hierarchical")
           end.join(sep_display).html_safe
 
-        elsif clickable_setting[:json]
-          json_value=''
-              subject = JSON.parse(value)
-              subject.map do |sub|
-                v = sub["subject"]
-                  if !json_value.empty?
-                  json_value += sep_index + v
-                  else
-                  json_value += v
-                  end
-                link_to(v, add_search_params(args[:field], '"' + json_value + '"'), class: "hierarchical")
-              end.join(sep_display).html_safe
-
+        elsif clickable_setting[:json] 
+          display_subject_headings(value, sep_index, sep_display, args)
 
         elsif clickable_setting[:pair_list]
           ## fields such as title are hierarchical
@@ -423,6 +412,35 @@ end
     end
   end
 
+## Hierarchical rendition of subject headings with info box button next to them
+def display_subject_headings(value, sep_index, sep_display, args)
+    field = args[:field]
+    root_url = args[:root_url]
+	json_value=''
+    subject = JSON.parse(value)
+    style_text = ""
+    indent = 0
+    subject.map do |sub|
+	  v = sub["subject"]
+      if !json_value.empty?
+        indent += 10
+        style_text = "margin-left:" + indent.to_s + "px;"
+      	json_value += sep_index + v
+      else
+      	json_value += v
+      end
+      info_button = ""
+      type = sub["type"] || ""
+      if sub.key?("authorized") && sub["authorized"] == true
+      	info_button = '<a href="#" role="button" tabindex = "0" base-url="' + request.base_url + 
+      	'" data-auth-type="subject" data-auth="' + v + '" datasearch-poload="/browse/info?authq=' + 
+      	v + '&amp;browse_type=Subject&amp;headingtype=' + type + '" id="info" class="info-button hidden-xs"><span class="label label-info">' + 
+		'i</span></a>'
+      end
+      
+      "<div style='" + style_text + "'>" + link_to(v, add_search_params(field, '"' + json_value + '"'), class: "hierarchical") + "&nbsp;" + info_button + "</div>"
+     end.join(" ").html_safe
+end
 
   def add_search_params(field, value)
     new_search_params = {
