@@ -3,16 +3,17 @@
 $(document).ready(function() {
 	//getDerivativeWorks();
 	//getEditions();
-	$('*[data-auth]').click(
+	$(this).on('click', '*[data-auth]',
 		function() {
 			var e = $(this);
+			e.off('click');
 			var baseUrl = e.attr("base-url")
 			var auth = e.attr("data-auth");
 			auth = auth.replace(/,\s*$/, "");
 			//Also periods
 			auth = auth.replace(/.\s*$/, "");
 			//Set up container
-			var contentHtml = "<div id='popoverContent'><div id='wikidataContent'></div><div id='digitalCollectionsContent'></div></div>";
+			var contentHtml = "<div class=\"kp-content\"><div id='wikidataContent'></div><div id='digitalCollectionsContent'></div></div>";
         e.popover(
             {
               content : contentHtml,
@@ -123,8 +124,8 @@ $(document).ready(function() {
 		// Given loc uri, can you get matching wikidata entities
 		var wikidataEndpoint = "https://query.wikidata.org/sparql?";
 		var localname = getLocalName(LOCURI);
-		var sparqlQuery = "SELECT ?entity WHERE {?entity wdt:P244 \""
-			+ localname + "\"}";
+		var sparqlQuery = "SELECT ?entity ?entityLabel WHERE {?entity wdt:P244 \""
+			+ localname + "\" SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }}";
 		$.ajax({
 			url : wikidataEndpoint,
 			headers : {
@@ -134,14 +135,18 @@ $(document).ready(function() {
 				query : sparqlQuery
 			},
 			success : function(data) {
-				console.log("wikidata request");
-				console.log(data);
+				console.log("::::::::: wikidata request");
+				console.log(JSON.stringify(data));
 				// Data -> results -> bindings [0] ->
 				// entity -> value
-				var wikidataURI = parseWikidataSparqlResults(data);
+			    var wikidataParsedData = parseWikidataSparqlResults(data);
+				var wikidataURI = wikidataParsedData['uriValue'];
+				var authorLabel = wikidataParsedData['authorLabel'];
 				// Do a popover here with the wikidata uri and the loc uri
 				//if no wikidata uri then will just show null
-				var contentHtml = "<div>Source: Wikidata</div><div id='entityImage'></div>";
+				var contentHtml = "<div class=\"kp-flexrow\"><figure class=\"kp-entity-image\"></figure><div><h3>" 
+				+ authorLabel +
+				"</h3><div class=\"kp-source\">Source: Wikidata</div><div></div>";
 				$("#wikidataContent").append(contentHtml);
 				//Get notable results
 				if(wikidataURI != null) {
@@ -160,22 +165,28 @@ $(document).ready(function() {
 
 	// function to parse sparql query results from wikidata
 	function parseWikidataSparqlResults(data) {
-
+		// get URI and author name from data
 		if (data && "results" in data
 				&& "bindings" in data["results"]) {
 			var bindings = data["results"]["bindings"];
 			if (bindings.length) {
 				var binding = bindings[0];
-				if ("entity" in binding
-						&& "value" in binding["entity"]) {
+				if ("entity" in binding && "value" in binding["entity"]) {
 					var uriValue = binding["entity"]["value"];
-					console.log("wikidata uri is " + uriValue);
-					return uriValue;
+				}
+				if ("entityLabel" in binding && "value" in binding["entityLabel"]) {
+					var authorLabel = binding["entityLabel"]["value"];
 				}
 			}
 		}
-		return null;
-
+		// return only what was found
+		if (authorLabel && uriValue) {
+			return {uriValue: uriValue, authorLabel: authorLabel};
+		} else if (uriValue) {
+			return {uriValue: uriValue, authorLabel: null};
+		} else {
+			return null;
+		}
 	}
 
 	//function to get localname from LOC URI
@@ -227,7 +238,7 @@ $(document).ready(function() {
 								notableHtmlArray.push("<a href='" + notableWorkURI + "'>" + notableWorkLabel + "</a>");
 							}
 						}
-						notableWorksHtml += notableHtmlArray.join("</li><li>") + "</li></ul><button id=\"expnext-notable\">Show More</button></div>";
+						notableWorksHtml += notableHtmlArray.join("</li><li>") + "</li></ul><button id=\"expnext-notable\">&#x25BD; more</button></div>";
 						$("#wikidataContent").append(notableWorksHtml);
 					}
 				}
@@ -271,7 +282,7 @@ $(document).ready(function() {
 								notableHtmlArray.push("<a href='iURI'>" + iLabel + "</a>");
 							}
 						}
-						notableWorksHtml += notableHtmlArray.join("</li><li>") + "</li></ul><button id=\"expnext-influencedby\">Show More</button></div>";
+						notableWorksHtml += notableHtmlArray.join("</li><li>") + "</li></ul><button id=\"expnext-influencedby\">&#x25BD; more</button></div>";
 						$("#wikidataContent").append(notableWorksHtml);
 					}
 				}
@@ -352,7 +363,7 @@ $(document).ready(function() {
 						if ("image" in binding
 								&& "value" in binding["image"] ) {
 							var image = binding["image"]["value"];
-							$("#entityImage").append("<img style='max-width:100px;max-height:100px' src='" + image + "'>");
+							$(".kp-entity-image").append("<img src='" + image + "'>");
 
 						}
 					}
