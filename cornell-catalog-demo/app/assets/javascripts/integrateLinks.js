@@ -1,29 +1,32 @@
 $(document).ready(function() {
-  //getDerivativeWorks();
-  //getEditions();
-  $('*[data-auth]').click(
+
+  $(this).on('click', '*[data-auth]', 
       function(event) {
         var e = $(this);
         e.off('click');
         event.preventDefault();
-        var baseUrl = e.attr("base-url")
+        //var baseUrl = e.attr("base-url")
+        var baseUrl = $("#itemDetails").attr("base-url")
         var auth = e.attr("data-auth");
         auth = auth.replace(/,\s*$/, "");
+        console.log("base url " + baseUrl);
         //Also periods
         auth = auth.replace(/.\s*$/, "");
         var authType = e.attr("data-auth-type");
         console.log("Authorization type is " + authType);
         var catalogAuthURL = e.attr("datasearch-poload");
         //Set up container
-        var contentHtml = "<div id='popoverContent'><div id='wikidataContent'></div><div id='digitalCollectionsContent'></div></div>";
+        var contentHtml = "<div id='popoverContent'><div id='authContent'></div><div id='wikidataContent'></div><div id='digitalCollectionsContent'></div></div>";
         e.popover(
             {
               content : contentHtml,
                 html : true,
                 trigger : 'focus'
             }).popover('show');
-        
-        //
+        //Get authority content
+        $.get(catalogAuthURL,function(d) {
+          $("#authContent").append(d);
+        });
         if(authType == "author") {
           var lookupURL = "http://id.loc.gov/authorities/names/suggest/?q="
             + auth
@@ -46,15 +49,10 @@ $(document).ready(function() {
               }
             }
           });
-          
-          //Add query to lookup digital collections
-          searchDigitalCollections(baseUrl, auth);
-        } else {
-          $.get(catalogAuthURL,function(d) {
-            //e.popover({content: d, html:true, trigger:'focus'}).popover('show');
-            $("#popoverContent").append(d);
-          });
-        }
+        } 
+        
+        //Add query to lookup digital collections
+        searchDigitalCollections(baseUrl, auth);
       });
 
   
@@ -368,106 +366,6 @@ $(document).ready(function() {
       }
 
     });
-  }
-  
-  //Hard coded derived works
-  function getDerivativeWorks() {
-    //Hardcoded, to be retrieved somehow later
-    var wikidataURI = "http://www.wikidata.org/entity/Q170583";
-    var wikidataEndpoint = "https://query.wikidata.org/sparql?";
-    var sparqlQuery = "SELECT ?notable_work ?title ?instanceTypeLabel WHERE {<" + wikidataURI + "> wdt:P4969 ?notable_work. ?notable_work wdt:P1476 ?title.  OPTIONAL {?notable_work wdt:P31 ?instanceType .} SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }}";
-  
-    $.ajax({
-      url : wikidataEndpoint,
-      headers : {
-        Accept : 'application/sparql-results+json'
-      },
-      data : {
-        query : sparqlQuery
-      },
-      success : function(data) {
-        
-        console.log("Derivative works ");
-        console.log(data);
-        if (data && "results" in data
-            && "bindings" in data["results"]) {
-          var bindings = data["results"]["bindings"];
-          var bLength = bindings.length;
-          var b;
-          if (bindings.length) {
-            var notableWorksHtml = "<li class='list-group-item citation'>Derivative (Wikidata):  <br/>";
-            var notableHtmlArray = [];
-            for(b = 0; b < bLength; b++) {
-              var binding = bindings[b];
-              if ("notable_work" in binding
-                  && "value" in binding["notable_work"] 
-                  && "title" in binding 
-                  && "value" in binding["title"]
-                    ) {
-                var notableWorkURI = binding["notable_work"]["value"];
-                var notableWorkLabel = binding["title"]["value"];
-                var instanceTypeLabel = "";
-                if("instanceTypeLabel" in binding
-                        && "value" in binding["instanceTypeLabel"])
-                  instanceTypeLabel = "(" + binding["instanceTypeLabel"]["value"] + ")";
-                console.log("uri and label for derivative work " + notableWorkURI + ":" + notableWorkLabel);
-                notableHtmlArray.push("<a href='" + notableWorkURI + "'>" + notableWorkLabel + " " + instanceTypeLabel + " </a>");
-              }
-            }
-            notableWorksHtml += notableHtmlArray.join("<br/>") + "</li>";
-            $("#related_works").append(notableWorksHtml);
-          }
-        }
-      }
-
-    }); 
-  }
-  
-  function getEditions() {
-    //Hard coded URI, to be retrieved somehow later
-    var wikidataURI = "http://www.wikidata.org/entity/Q170583";
-    var wikidataEndpoint = "https://query.wikidata.org/sparql?";
-    var sparqlQuery = "SELECT ?notable_work ?notable_workLabel WHERE {?notable_work wdt:P629 <" + wikidataURI + "> .  SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } }";
-  
-    $.ajax({
-      url : wikidataEndpoint,
-      headers : {
-        Accept : 'application/sparql-results+json'
-      },
-      data : {
-        query : sparqlQuery
-      },
-      success : function(data) {
-        
-        console.log("Editions of works ");
-        console.log(data);
-        if (data && "results" in data
-            && "bindings" in data["results"]) {
-          var bindings = data["results"]["bindings"];
-          var bLength = bindings.length;
-          var b;
-          if (bindings.length) {
-            var notableWorksHtml = "<li class='list-group-item citation'>Editions or Translations (Wikidata):  <br/>";
-            var notableHtmlArray = [];
-            for(b = 0; b < bLength; b++) {
-              var binding = bindings[b];
-              if ("notable_work" in binding
-                  && "value" in binding["notable_work"] 
-                  && "notable_workLabel" in binding 
-                  && "value" in binding["notable_workLabel"]) {
-                var notableWorkURI = binding["notable_work"]["value"];
-                var notableWorkLabel = binding["notable_workLabel"]["value"];
-                console.log("uri and label for edition work " + notableWorkURI + ":" + notableWorkLabel);
-                notableHtmlArray.push("<a href='" + notableWorkURI + "'>" + notableWorkLabel + "</a>");
-              }
-            }
-            notableWorksHtml += notableHtmlArray.join("<br/> ") + "</li>";
-            $("#related_works").append(notableWorksHtml);
-          }
-        }
-      }
-
-    }); 
   }
   
   
