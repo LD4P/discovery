@@ -62,8 +62,8 @@ $(document).ready(function() {
          if("response" in data && "docs" in data.response) {
            results = data["response"]["docs"];
            //iterate through array
-           var resultsHtml = "<div><ul>";
-           var authorsHtml ="<div>";
+           var resultsHtml = "<div><ul class=\"explist-digitalresults\">";
+           var authorsHtml ="<div><ul class=\"explist-digitalcontributers\">";
            var authorsHtmlArray = [];
            var maxLen = 10;
            var len = results.length;
@@ -84,19 +84,19 @@ $(document).ready(function() {
                var c = creator.length;
                var i;
                for(i = 0; i < creator.length; i++ ) {
-                 authorsHtmlArray.push("<a href='" + baseUrl + "catalog?q=" + creator[i] + "&search_field=all_fields'>" + creator[i] + "</a>");
+                 authorsHtml += "<li><a href='" + baseUrl + "catalog?q=" + creator[i] + "&search_field=all_fields'>" + creator[i] + "</a></li>";
                }
              }
            }
            
   
-           resultsHtml += "</ul></div>";
-           authorsHtml += authorsHtmlArray.join(", ") + "</div>";
+           resultsHtml += "</li></ul><button id=\"expnext-digitalresults\">&#x25BD; more</button></div>";
            var displayHtml = "<div><h4>Digital Collections Results</h4>" + 
            resultsHtml + "<h4>Related Digital Collections Contributors</h4>" + 
-           authorsHtml + "</div>";
-           console.log(displayHtml)
+           authorsHtml + "</ul><button id=\"expnext-digitalcontributers\">&#x25BD; more</button></div>";
            $("#digitalCollectionsContent").append(displayHtml);
+           listExpander('digitalresults');
+           listExpander('digitalcontributers');
          }
          
       }
@@ -135,8 +135,6 @@ $(document).ready(function() {
 				query : sparqlQuery
 			},
 			success : function(data) {
-				console.log("::::::::: wikidata request");
-				console.log(JSON.stringify(data));
 				// Data -> results -> bindings [0] ->
 				// entity -> value
 			    var wikidataParsedData = parseWikidataSparqlResults(data);
@@ -313,7 +311,7 @@ $(document).ready(function() {
 					var bLength = bindings.length;
 					var b;
 					if (bindings.length) {
-						var notableWorksHtml = "<div><h4>Was influenced by</h4><ul><li>";
+						var notableWorksHtml = "<div><h4>Was influenced by</h4><ul class=\"explist-whoinfluenced\"><li>";
 						var notableHtmlArray = [];
 						for(b = 0; b < bLength; b++) {
 							var binding = bindings[b];
@@ -326,10 +324,11 @@ $(document).ready(function() {
 								notableHtmlArray.push("<a href='iURI'>" + iLabel + "</a>");
 							}
 						}
-						notableWorksHtml += notableHtmlArray.join("</li><li>") + "</li></ul></div>";
+						notableWorksHtml += notableHtmlArray.join("</li><li>") + "</li></ul><button id=\"expnext-whoinfluenced\">&#x25BD; more</button></div>";
 						$("#wikidataContent").append(notableWorksHtml);
 					}
 				}
+				listExpander('whoinfluenced');
 			}
 
 		});

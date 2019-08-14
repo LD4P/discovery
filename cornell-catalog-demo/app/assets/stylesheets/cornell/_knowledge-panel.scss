@@ -1,12 +1,12 @@
 
 // Top row with author's image and name
-.kp-flexrow {
+.kp-content .kp-flexrow {
   display: flex;
 }
-figure.kp-entity-image {
+.kp-content figure.kp-entity-image {
   margin-right: 10px;
 }
-figure.kp-entity-image > img {
+.kp-content figure.kp-entity-image > img {
   max-width: 100px;
   max-height: 100px;
 }
@@ -14,7 +14,7 @@ figure.kp-entity-image > img {
   margin: 0;
   line-height: 1.2;
 }
-.kp-source {
+.kp-content .kp-source {
   font-size: smaller;
   margin-top: 5px;
 }
@@ -23,12 +23,12 @@ figure.kp-entity-image > img {
 .kp-content h4 {
   margin: 10px 0 4px 0;
 }
-ul {
+.kp-content ul {
   list-style: none;
   padding: 0 !important;
   margin-bottom: 0;
 }
-li:before {
+.kp-content li:before {
   content: "•";
   padding-right: 3px;
 }
