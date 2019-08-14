@@ -235,8 +235,6 @@ $(document).ready(function() {
 
 		});
 	}
-
-	
 	
 	//Wikidata people who influenced the current author
 	function getPeopleInfluencedBy(wikidataURI){
