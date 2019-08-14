@@ -193,7 +193,7 @@ $(document).ready(function() {
 	//Wikidata notable works
 	function getNotableWorks(wikidataURI){
 		var wikidataEndpoint = "https://query.wikidata.org/sparql?";
-		var sparqlQuery = "SELECT ?notable_work ?title WHERE {<" + wikidataURI + "> wdt:P800 ?notable_work. ?notable_work wdt:P1476 ?title. }";
+		var sparqlQuery = "SELECT ?notable_work ?title WHERE {<" + wikidataURI + "> wdt:P800 ?notable_work. ?notable_work wdt:P1476 ?title. ?notable_work wikibase:sitelinks ?linkcount . } ORDER BY DESC(?linkcount)";
 	
 		$.ajax({
 			url : wikidataEndpoint,
@@ -239,7 +239,7 @@ $(document).ready(function() {
 	//Wikidata people who influenced the current author
 	function getPeopleInfluencedBy(wikidataURI){
 		var wikidataEndpoint = "https://query.wikidata.org/sparql?";
-		var sparqlQuery = "SELECT ?influenceFor ?influenceForLabel WHERE {?influenceFor wdt:P737 <" + wikidataURI + "> . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } }";
+		var sparqlQuery = "SELECT ?influenceFor ?influenceForLabel WHERE {?influenceFor wdt:P737 <" + wikidataURI + "> . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } } ORDER BY ASC(?influenceForLabel)";
 	
 		$.ajax({
 			url : wikidataEndpoint,
@@ -281,7 +281,7 @@ $(document).ready(function() {
 	//Wikidata author influenced these people
 	function getPeopleWhoInfluenced(wikidataURI){
 		var wikidataEndpoint = "https://query.wikidata.org/sparql?";
-		var sparqlQuery = "SELECT ?influencedBy ?influencedByLabel WHERE {<" + wikidataURI + "> wdt:P737 ?influencedBy . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } }";
+		var sparqlQuery = "SELECT ?influencedBy ?influencedByLabel WHERE {<" + wikidataURI + "> wdt:P737 ?influencedBy . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } } ORDER BY ASC(?influencedByLabel)";
 	
 		$.ajax({
 			url : wikidataEndpoint,
