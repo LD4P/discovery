@@ -235,11 +235,14 @@ $(document).ready(function() {
 
 		});
 	}
+
+	
 	
 	//Wikidata people who influenced the current author
 	function getPeopleInfluencedBy(wikidataURI){
 		var wikidataEndpoint = "https://query.wikidata.org/sparql?";
-		var sparqlQuery = "SELECT ?influenceFor ?influenceForLabel WHERE {?influenceFor wdt:P737 <" + wikidataURI + "> . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } } ORDER BY ASC(?influenceForLabel)";
+		//var sparqlQuery = "SELECT ?influenceFor ?influenceForLabel WHERE {?influenceFor wdt:P737 <" + wikidataURI + "> . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } } ORDER BY ASC(?influenceForLabel)";
+		var sparqlQuery = "SELECT ?influenceFor ?surname ?givenName ?surnameLabel ?givenNameLabel ( CONCAT(?surnameLabel, \", \" ,?givenNameLabel ) AS ?influenceForLabel ) WHERE { ?influenceFor wdt:P737 <" + wikidataURI + "> . ?influenceFor wdt:P734 ?surname . ?influenceFor wdt:P735 ?givenName . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }} ORDER BY ASC(?surnameLabel)"
 	
 		$.ajax({
 			url : wikidataEndpoint,
@@ -269,7 +272,7 @@ $(document).ready(function() {
 								notableHtmlArray.push("<a href='iURI'>" + iLabel + "</a>");
 							}
 						}
-						notableWorksHtml += notableHtmlArray.join(", ") + "</div>";
+						notableWorksHtml += notableHtmlArray.join("; ") + "</div>";
 						$("#wikidataContent").append(notableWorksHtml);
 					}
 				}
@@ -281,8 +284,9 @@ $(document).ready(function() {
 	//Wikidata author influenced these people
 	function getPeopleWhoInfluenced(wikidataURI){
 		var wikidataEndpoint = "https://query.wikidata.org/sparql?";
-		var sparqlQuery = "SELECT ?influencedBy ?influencedByLabel WHERE {<" + wikidataURI + "> wdt:P737 ?influencedBy . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } } ORDER BY ASC(?influencedByLabel)";
-	
+		//var sparqlQuery = "SELECT ?influencedBy ?influencedByLabel WHERE {<" + wikidataURI + "> wdt:P737 ?influencedBy . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } } ORDER BY ASC(?influencedByLabel)";
+		var sparqlQuery = "SELECT ?influencedBy ?surname ?givenName ?surnameLabel ?givenNameLabel ( CONCAT(?surnameLabel, \", \" ,?givenNameLabel ) AS ?influencedByLabel ) WHERE { <" + wikidataURI + "> wdt:P737 ?influencedBy . ?influencedBy wdt:P734 ?surname . ?influencedBy wdt:P735 ?givenName . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }} ORDER BY ASC(?surnameLabel)"
+
 		$.ajax({
 			url : wikidataEndpoint,
 			headers : {
@@ -311,7 +315,7 @@ $(document).ready(function() {
 								notableHtmlArray.push("<a href='iURI'>" + iLabel + "</a>");
 							}
 						}
-						notableWorksHtml += notableHtmlArray.join(", ") + "</div>";
+						notableWorksHtml += notableHtmlArray.join("; ") + "</div>";
 						$("#wikidataContent").append(notableWorksHtml);
 					}
 				}
