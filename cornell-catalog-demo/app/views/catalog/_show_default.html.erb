@@ -1,5 +1,5 @@
 <%# default partial to display solr document fields in catalog show view -%>
-<dl class="dl-horizontal">
+<dl class="dl-horizontal" id="itemDetails" base-url="<%= root_url %>">
   <% document_show_fields(document).each do |solr_fname, field| -%>
     <% if document.has? solr_fname  -%>
 	    <dt class="blacklight-<%= solr_fname.parameterize %>"><%= render_document_show_field_label document, :field => solr_fname %></dt>
@@ -17,8 +17,8 @@
               <% else search = heading['search1']  %>
               <% end %>
               <%# show heading popover for everything bigger than smartphone %>
-	          <a href='#' role="button" tabindex = "0" base-url="<%= root_url %>" data-auth='<%=search %>' datasearch-poload='/browse/info?authq=<%=  search %>&amp;browse_type=Author&amp;headingtype=<%=  type %>' id="info" class="info-button hidden-xs"><span class="label label-info">
-	            Info
+	          <a href='#' role="button" tabindex = "0" base-url="<%= root_url %>" data-auth-type='author' data-auth='<%=search %>' datasearch-poload='/browse/info?authq=<%=  search %>&amp;browse_type=Author&amp;headingtype=<%=  type %>' id="info" class="info-button hidden-xs"><span class="label label-info">
+	            i
 	          </span>
 	          </a>
 	          <%# link directly to heading on smartphone %>
@@ -38,6 +38,12 @@
 		      <% end %>
 	        <% end %>
           <% end %>
+        <% elsif  solr_fname == 'subject_json'-%> 
+            <% authname = field_value solr_fname %>
+	          <% document['subject_json'].each do |subjectArray| %>
+	            <% subjects = JSON.parse(subjectArray) %>
+	            <%= render_clickable_document_show_field_value :value => subjectArray, :document => document, :field => solr_fname, :root_url => root_url %> 
+	          <% end %>   
         <% elsif display_link? solr_fname -%>   
            <%= render_display_link :document => document, :field => solr_fname %>
         <% elsif display_clickable? solr_fname -%>
