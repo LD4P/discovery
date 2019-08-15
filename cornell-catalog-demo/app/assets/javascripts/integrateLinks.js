@@ -167,6 +167,7 @@ $(document).ready(function () {
   }
 
   // Query wikidata
+  //TODO: make label optional
   function queryWikidata(LOCURI) {
     // Given loc uri, can you get matching wikidata entities
     var wikidataEndpoint = "https://query.wikidata.org/sparql?";
@@ -190,9 +191,10 @@ $(document).ready(function () {
         var authorLabel = wikidataParsedData['authorLabel'];
         // Do a popover here with the wikidata uri and the loc uri
         // if no wikidata uri then will just show null
-        var contentHtml = "<section class=\"kp-flexrow\"><div><h3>"
-          + authorLabel
-          + "</h3><span class=\"kp-source\">Source: Wikidata</span></div></section>";
+        // Currently hide label 
+        // For now, we are linking to items with authority files so we should have the label
+        // Second, the label seems to be undefined in some cases
+        var contentHtml = "<section class=\"kp-flexrow\"><div><h3>Wikidata Info</h3></section>";
         $("#wikidataContent").append(contentHtml);
         // Get notable results
         if (wikidataURI != null) {
