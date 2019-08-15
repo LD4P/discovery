@@ -8,20 +8,17 @@ $(document).ready(function () {
         event.preventDefault();
         // var baseUrl = e.attr("base-url")
         var baseUrl = $("#itemDetails").attr("base-url");
-        console.log("base url " + baseUrl);
         var auth = e.attr("data-auth");
         var headingType = e.attr("heading-type");
-        console.log("Auth value is " + auth);
         auth = auth.replace(/,\s*$/, "");
-        console.log("After replacing comma " + auth);
         // Also periods
         auth = auth.replace(/\.\s*$/, "");
-        console.log("Auth after replacing period " + auth);
         var authType = e.attr("data-auth-type");
-        console.log("Authorization type is " + authType);
         var catalogAuthURL = e.attr("datasearch-poload");
         // Set up container
-        var contentHtml = "<div id='popoverContent' class='kp-content'><div id='authContent'></div><div id='wikidataContent'></div><div id='digitalCollectionsContent'></div></div>";
+        var contentHtml = "<div id='popoverContent' class='kp-content'>" + 
+        "<div id='authContent' style='float:none'><div style='float:left;clear:both' id='imageContent'></div></div>" + 
+        "<div id='wikidataContent'></div><div id='digitalCollectionsContent'></div></div>";
         //,trigger : 'focus'
         e.popover({
           content : contentHtml,
@@ -32,47 +29,66 @@ $(document).ready(function () {
         $.get(catalogAuthURL, function (d) {
           $("#authContent").append(d);
         });
-        locPath = "names";
-        rdfType = "PersonalName";
-        // Even though LCSH has person names, querying /subjects for
-        // names won't get you main resource
-        // TODO: look into
-        // id.loc.gov/authorities/names/label/[label]
-        // for subject, LOC query will replace > with --
-        // Digital collections will just use space for now
-        var locQuery = auth;
-        var digitalQuery = auth;
-        if (authType == "subject") {
-          if (headingType != "Personal Name") {
-            locPath = "subjects";
-            rdfType = "(Topic OR rdftype:ComplexSubject)";
-          }
-          locQuery = locQuery.replace(/\s>\s/g, "--");
-          digitalQuery = digitalQuery.replace(/>/g, " ");
-        }
-        var lookupURL = "http://id.loc.gov/authorities/" + locPath
-        + "/suggest/?q=" + locQuery + "&rdftype=" + rdfType
-        + "&count=1";
-        // Copied from original bfe example
-
-        $.ajax({
-          url : lookupURL,
-          dataType : 'jsonp',
-          success : function (data) {
-            urisArray = parseLOCSuggestions(data);
-            if (urisArray && urisArray.length) {
-              var locURI = urisArray[0]; // Pick
-              // first
-              // one
-              console.log("LOC URI is " + locURI);
-              queryWikidata(locURI, e);
-            }
-          }
-        });
-
+       queryLOC(auth, authType, headingType);
         // Add query to lookup digital collections
-        searchDigitalCollections(baseUrl, digitalQuery);
+        searchDigitalCollections(baseUrl, getDigitalCollectionsQuery(auth, authType));
       });
+  
+  function queryLOC(auth, authType, headingType) {
+    locPath = "names";
+    rdfType = "PersonalName";
+    // Even though LCSH has person names, querying /subjects for
+    // names won't get you main resource
+    // TODO: look into
+    // id.loc.gov/authorities/names/label/[label]
+    // for subject, LOC query will replace > with --
+    // Digital collections will just use space for now
+    var locQuery = auth;   
+    if(authType == "subject") {
+      if(headingType == "Geographic Name") {
+        rdfType = "Geographic";
+      }
+      else if (headingType != "Personal Name") {
+        locPath = "subjects";
+        rdfType = "(Topic OR rdftype:ComplexSubject)";
+      } 
+      locQuery = locQuery.replace(/\s>\s/g, "--");
+    }
+    queryLOCSuggestions(locPath, locQuery, rdfType);
+  }
+  
+  function getDigitalCollectionsQuery(auth, authType) {
+    var digitalQuery = auth;
+    if(authType == "subject") {    
+        digitalQuery = digitalQuery.replace(/>/g, " ");
+    }
+    return digitalQuery;
+
+  }
+  
+  function queryLOCSuggestions(locPath, locQuery, rdfType) {   
+    var lookupURL = "http://id.loc.gov/authorities/" + locPath
+    + "/suggest/?q=" + locQuery + "&rdftype=" + rdfType
+    + "&count=1";
+    $.ajax({
+      url : lookupURL,
+      dataType : 'jsonp',
+      success : function (data) {
+        urisArray = parseLOCSuggestions(data);
+        if (urisArray && urisArray.length) {
+          var locURI = urisArray[0]; 
+          console.log("LOC URI from suggestions is " + locURI);
+          queryWikidata(locURI);
+        }
+      }
+    });
+  }
+  
+  //Get entity using the label directly
+  //If this approach, then could also potentially parse returned JSON for related Wikidata URI
+  function retrieveLOCEntityByLabel() {
+    
+  }
 
   // Function to lookup digital collections
   function searchDigitalCollections(baseUrl, authString) {
@@ -151,7 +167,8 @@ $(document).ready(function () {
   }
 
   // Query wikidata
-  function queryWikidata(LOCURI, e) {
+  //TODO: make label optional
+  function queryWikidata(LOCURI) {
     // Given loc uri, can you get matching wikidata entities
     var wikidataEndpoint = "https://query.wikidata.org/sparql?";
     var localname = getLocalName(LOCURI);
@@ -174,9 +191,10 @@ $(document).ready(function () {
         var authorLabel = wikidataParsedData['authorLabel'];
         // Do a popover here with the wikidata uri and the loc uri
         // if no wikidata uri then will just show null
-        var contentHtml = "<section class=\"kp-flexrow\"><figure class=\"kp-entity-image\"></figure><div><h3>"
-          + authorLabel
-          + "</h3><span class=\"kp-source\">Source: Wikidata</span></div></section>";
+        // Currently hide label 
+        // For now, we are linking to items with authority files so we should have the label
+        // Second, the label seems to be undefined in some cases
+        var contentHtml = "<section class=\"kp-flexrow\"><div><h3>Wikidata Info</h3></section>";
         $("#wikidataContent").append(contentHtml);
         // Get notable results
         if (wikidataURI != null) {
@@ -184,6 +202,7 @@ $(document).ready(function () {
           getNotableWorks(wikidataURI);
           getPeopleInfluencedBy(wikidataURI);
           getPeopleWhoInfluenced(wikidataURI);
+          getNarrativeLocations(wikidataURI);
         }
 
       }
@@ -217,11 +236,6 @@ $(document).ready(function () {
     // Get string right after last slash if it's present
     // TODO: deal with hashes later
     return uri.split("/").pop();
-  }
-
-  // Wikidata entity
-  function retrieveWikidataEntity(wikidataURI) {
-
   }
 
   // Wikidata notable works
@@ -393,9 +407,6 @@ $(document).ready(function () {
         query : sparqlQuery
       },
       success : function (data) {
-
-        console.log("Image ");
-        console.log(data);
         if (data && "results" in data
             && "bindings" in data["results"]) {
           var bindings = data["results"]["bindings"];
@@ -404,10 +415,12 @@ $(document).ready(function () {
           if (bindings.length) {
             var notableWorksHtml = "<img src=' ";
             var binding = bindings[0];
-            if ("image" in binding && "value" in binding["image"]) {
+            if ("image" in binding && "value" in binding["image"] 
+               && binding["image"]["value"]) {
               var image = binding["image"]["value"];
-              $(".kp-entity-image").append(
-                  "<img src='" + image + "'>");
+              var html = "<figure class='kp-entity-image'><img src='" + image + "'></figure>" + 
+              "<span class='kp-source'>Image: Wikidata</span>";
+              $("#imageContent").append(html);
 
             }
           }
