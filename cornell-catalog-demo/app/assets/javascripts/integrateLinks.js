@@ -202,6 +202,7 @@ $(document).ready(function () {
           getNotableWorks(wikidataURI);
           getPeopleInfluencedBy(wikidataURI);
           getPeopleWhoInfluenced(wikidataURI);
+          getNarrativeLocations(wikidataURI);
         }
 
       }

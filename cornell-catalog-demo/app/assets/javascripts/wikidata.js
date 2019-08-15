@@ -28,8 +28,10 @@ var processWikidata = {
       },
       success : function(data) {
         if ( data['results']['bindings'].length ) {
-            processWikidata.getWikiDerivatives(data['results']['bindings'][0]['entity']['value']);
-            processWikidata.getWikiEditions(data['results']['bindings'][0]['entity']['value']);
+            var URI = data['results']['bindings'][0]['entity']['value'];
+            processWikidata.getWikiDerivatives(URI);
+            processWikidata.getWikiEditions(URI);
+            processWikidata.getNarrativeLocations(URI);
         } 
         else {
           console.log("woe is me");
@@ -172,6 +174,65 @@ var processWikidata = {
         console.log("Wikidata = " + response.toSource());
       } 
     });
+  },
+  
+  //Get narrative locations
+  //Unlike the other properties, this information is appended directly to the item details list
+ getNarrativeLocations: function (wikidataURI) {
+    var wikidataEndpoint = "https://query.wikidata.org/sparql?";
+    var sparqlQuery = "SELECT ?narrativeLocation ?narrativeLocationLabel ?locURI ?fastURI ?geonamesURI WHERE {<"
+      + wikidataURI
+      + "> wdt:P840 ?narrativeLocation. " 
+      + "OPTIONAL {?narrativeLocation wdt:P244 ?locURI . }"
+      + "OPTIONAL {?narrativeLocation wdt:P2163 ?fastURI . }" 
+      + "OPTIONAL {?narrativeLocation wdt:P1566 ?geonamesURI . }"
+      + "SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". } } ORDER BY ?narrativeLocationLabel";
+    var fieldName = "Narrative Locations";
+    var fieldValue = [];
+    $.ajax({
+      url : wikidataEndpoint,
+      headers : {
+        Accept : 'application/sparql-results+json'
+      },
+      data : {
+        query : sparqlQuery
+      },
+      success : function (data) {
+        if (data && "results" in data
+            && "bindings" in data["results"]) {
+          var bindings = data["results"]["bindings"];
+          var bLength = bindings.length;
+          var b;
+          if (bindings.length) {
+            for (b = 0; b < bLength; b++) {
+              var binding = bindings[b];
+              if("narrativeLocation" in binding && "narrativeLocationLabel" in binding 
+                  && "value" in binding["narrativeLocation"] && "value" in binding["narrativeLocationLabel"]) {
+                var narrativeLocation = binding["narrativeLocation"]["value"];
+                var narrativeLocationLabel = binding["narrativeLocationLabel"]["value"];
+                if("fastURI" in binding && "value" in binding["fastURI"]) {
+                  var fastURI = binding["fastURI"]["value"];
+                  narrativeLocationLabel = "<span id='geo" + fastURI + "' fastURI='" + fastURI + "'>" + narrativeLocationLabel + "</span>";
+                }
+                fieldValue.push(narrativeLocationLabel);
+              }
+            }
+            $("#itemDetails").append(processWikidata.generateItemViewRow(fieldName, fieldValue.join("<br/>")));
+                
+          }
+        }
+   
+      }
+    });
+  },
+  
+  generateItemViewRow: function(fieldName, fieldValue) {
+    var fieldNameId = fieldName.replace(/\s/g, '');
+    return  "<dt class='blacklight-" + fieldNameId + "'>" + fieldName + "</dt>"
+    + "<dd class='blacklight-" + fieldNameId + "'>" + fieldValue + "</dd>";
+  },
+  retrieveFASTString: function(fastURI) {
+    //An AJAX request that 
   }
 };  
 Blacklight.onLoad(function() {
