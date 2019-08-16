@@ -117,7 +117,7 @@ $(document).ready(function () {
             var title = result["title_tesim"];
             var digitalURL = "http://digital.library.cornell.edu/catalog/"
               + id;
-            resultsHtml += "<li>" + generateExternalLinks(digitalURL, title) + "</li>";
+            resultsHtml += "<li>" + generateExternalLinks(digitalURL, title, "Digital Library Collections") + "</li>";
             var creator = [], creator_facet = [];
             if ("creator_tesim" in result)
               creator = result["creator_tesim"];
@@ -201,7 +201,6 @@ $(document).ready(function () {
           getNotableWorks(wikidataURI);
           getPeopleInfluencedBy(wikidataURI);
           getPeopleWhoInfluenced(wikidataURI);
-          getNarrativeLocations(wikidataURI);
         }
 
       }
@@ -274,7 +273,7 @@ $(document).ready(function () {
                 var notableWorkLabel = binding["title"]["value"];
                 console.log("uri and label for notable work "
                     + notableWorkURI + ":" + notableWorkLabel);
-                notableHtmlArray.push(generateExternalLinks(notableWorkURI, notableWorkLabel));
+                notableHtmlArray.push(generateExternalLinks(notableWorkURI, notableWorkLabel, "Wikidata"));
               }
             }
             notableWorksHtml += notableHtmlArray.join("</li><li>")
@@ -324,7 +323,7 @@ $(document).ready(function () {
                 && "value" in binding["influenceForLabel"]) {
                   var iURI = binding["influenceFor"]["value"];
                   var iLabel = binding["influenceForLabel"]["value"];
-                  notableHtmlArray.push(generateExternalLinks(iURI, iLabel));
+                  notableHtmlArray.push(generateExternalLinks(iURI, iLabel, "Wikidata"));
                 }
               }
               notableWorksHtml += notableHtmlArray.join("</li><li>")
@@ -374,12 +373,13 @@ $(document).ready(function () {
                 && "value" in binding["influencedByLabel"]) {
                   var iURI = binding["influencedBy"]["value"];
                   var iLabel = binding["influencedByLabel"]["value"];
-                  notableHtmlArray.push(generateExternalLinks(iURI, iLabel));
+                  notableHtmlArray.push(generateExternalLinks(iURI, iLabel, "Wikidata"));
                 }
               }
               notableWorksHtml += notableHtmlArray.join("</li><li>")
               + "</li></ul><button id=\"expnext-whoinfluenced\">&#x25BD; more</button></div>";
               $("#wikidataContent").append(notableWorksHtml);
+              //$('[data-toggle="tooltip"]').tooltip();
             }
           }
           listExpander('whoinfluenced');
@@ -428,10 +428,12 @@ $(document).ready(function () {
   }
   
   //Create both search link and outbound to entity link
-  function generateExternalLinks(URI, label) {
+  function generateExternalLinks(URI, label, sourceLabel) {
     var baseUrl = $("#itemDetails").attr("base-url");
     var keywordSearch = baseUrl + "catalog?q=" + label + "&search_field=all_fields";
-    return "<a href='" + keywordSearch + "'>" + label + "</a> (<a href='" + URI + "'>Link</a>)";
+    var title = "See " + sourceLabel;
+    return "<a data-toggle='tooltip' title='Search Library Catalog Info' data-placement='right' data-original-title='Search Library Catalog' href='" + keywordSearch + "'>" + label + "</a> " + 
+    "<a data-toggle='tooltip' title='" + title + "' data-placement='right' data-original-title='" + title + "' href='" + URI + "'><i class='fa fa-external-link'></i></a>";
   }
 
 });
