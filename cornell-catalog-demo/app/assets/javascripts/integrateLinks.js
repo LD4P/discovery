@@ -117,8 +117,7 @@ $(document).ready(function () {
             var title = result["title_tesim"];
             var digitalURL = "http://digital.library.cornell.edu/catalog/"
               + id;
-            resultsHtml += "<li><a href='" + digitalURL + "'>"
-            + title + "</a></li>";
+            resultsHtml += "<li>" + generateExternalLinks(digitalURL, title) + "</li>";
             var creator = [], creator_facet = [];
             if ("creator_tesim" in result)
               creator = result["creator_tesim"];
@@ -128,7 +127,7 @@ $(document).ready(function () {
               var c = creator.length;
               var i;
               for (i = 0; i < creator.length; i++) {
-                authorsHtml += "<li><a href='" + baseUrl
+                authorsHtml += "<li> <a href='" + baseUrl
                 + "catalog?q=" + creator[i]
                 + "&search_field=all_fields'>" + creator[i]
                 + "</a></li>";
@@ -275,8 +274,7 @@ $(document).ready(function () {
                 var notableWorkLabel = binding["title"]["value"];
                 console.log("uri and label for notable work "
                     + notableWorkURI + ":" + notableWorkLabel);
-                notableHtmlArray.push("<a href='" + notableWorkURI
-                    + "'>" + notableWorkLabel + "</a>");
+                notableHtmlArray.push(generateExternalLinks(notableWorkURI, notableWorkLabel));
               }
             }
             notableWorksHtml += notableHtmlArray.join("</li><li>")
@@ -326,8 +324,7 @@ $(document).ready(function () {
                 && "value" in binding["influenceForLabel"]) {
                   var iURI = binding["influenceFor"]["value"];
                   var iLabel = binding["influenceForLabel"]["value"];
-                  notableHtmlArray.push("<a href='iURI'>" + iLabel
-                      + "</a>");
+                  notableHtmlArray.push(generateExternalLinks(iURI, iLabel));
                 }
               }
               notableWorksHtml += notableHtmlArray.join("</li><li>")
@@ -377,8 +374,7 @@ $(document).ready(function () {
                 && "value" in binding["influencedByLabel"]) {
                   var iURI = binding["influencedBy"]["value"];
                   var iLabel = binding["influencedByLabel"]["value"];
-                  notableHtmlArray.push("<a href='iURI'>" + iLabel
-                      + "</a>");
+                  notableHtmlArray.push(generateExternalLinks(iURI, iLabel));
                 }
               }
               notableWorksHtml += notableHtmlArray.join("</li><li>")
@@ -429,6 +425,13 @@ $(document).ready(function () {
       }
 
     });
+  }
+  
+  //Create both search link and outbound to entity link
+  function generateExternalLinks(URI, label) {
+    var baseUrl = $("#itemDetails").attr("base-url");
+    var keywordSearch = baseUrl + "catalog?q=" + label + "&search_field=all_fields";
+    return "<a href='" + keywordSearch + "'>" + label + "</a> (<a href='" + URI + "'>Link</a>)";
   }
 
 });
