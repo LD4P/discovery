@@ -16,10 +16,23 @@ var buildAlternateSuggestions = {
       dataType: 'jsonp',
       jsonp: 'json.wrf', // avoid CORS and CORB errors
       complete: function(response) {
-        var countsList = response["responseJSON"]["facet_counts"]["facet_queries"];
-        buildAlternateSuggestions.displaySuggestions(Object.keys(countsList));
+        // get suggestions from query return that have nonzero catalog result counts
+        var suggestionsWithFacetCounts = Object.keys(response["responseJSON"]["facet_counts"]["facet_queries"]);
+        // get zero-count suggestions using array subtraction
+        suggestionDiff = suggestions.filter(n => !suggestionsWithFacetCounts.includes(n));
+        // check zero-count suggestions with nonfaceted search
+        buildAlternateSuggestions.doubleCheckSuggestions(suggestionDiff);
+        // display the suggestions that have nonzero catalog result counts
+        buildAlternateSuggestions.displaySuggestions(suggestionsWithFacetCounts);
       }
     });    
+  },
+
+  // function will check each suggestion that didn't pass the previous check
+  doubleCheckSuggestions: function(suggestions) {
+    console.log("Suggestions to double check: " + JSON.stringify(suggestions));
+    // output an array of suggestion strings that will be added to suggestionsWithFacetCounts in checkSuggestions
+    return [];
   },
 
   makeAjaxCalls: function(q) {
