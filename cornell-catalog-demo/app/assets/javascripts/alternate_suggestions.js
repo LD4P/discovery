@@ -21,7 +21,9 @@ var buildAlternateSuggestions = {
         // get zero-count suggestions using array subtraction
         suggestionDiff = suggestions.filter(n => !suggestionsWithFacetCounts.includes(n));
         // check zero-count suggestions with nonfaceted search
-        buildAlternateSuggestions.doubleCheckSuggestions(suggestionDiff);
+        let x = buildAlternateSuggestions.doubleCheckSuggestions(suggestionDiff);
+        console.log("new: " + JSON.stringify(x));
+        // currently x placeholder is empty because I need to get asynchronicity sorted out...
         // display the suggestions that have nonzero catalog result counts
         buildAlternateSuggestions.displaySuggestions(suggestionsWithFacetCounts);
       }
@@ -29,10 +31,28 @@ var buildAlternateSuggestions = {
   },
 
   // function will check each suggestion that didn't pass the previous check
-  doubleCheckSuggestions: function(suggestions) {
-    console.log("Suggestions to double check: " + JSON.stringify(suggestions));
-    // output an array of suggestion strings that will be added to suggestionsWithFacetCounts in checkSuggestions
-    return [];
+  doubleCheckSuggestions: async function(suggestions) {
+    let output = [] // suggestion strings that will be added to suggestionsWithFacetCounts in checkSuggestions
+    let unique = [...new Set(suggestions)]; // compel suggestion strings to be unique
+    
+    console.log("Suggestions to double check: " + JSON.stringify(unique));
+    $.each(unique, function(i, val) {
+      var solrQuery = "http://da-prod-solr8.library.cornell.edu/solr/ld4p2-blacklight/select?wt=json&rows=0&facet=false&q=" + val
+      $.ajax({
+        url: solrQuery,
+        type: 'GET',
+        dataType: 'jsonp',
+        jsonp: 'json.wrf', // avoid CORS and CORB errors
+        complete: function(response) {
+          console.log(val + ": " + JSON.stringify(response["responseJSON"]["response"]["numFound"]));
+          if (response["responseJSON"]["response"]["numFound"] > 0) {
+            output.push(val);
+          };
+          
+        }
+      });
+    });
+    return output;
   },
 
   makeAjaxCalls: function(q) {
