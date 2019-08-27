@@ -1,20 +1,11 @@
 var processWikidata = {
   onLoad: function() {
-      this.bindEventHandlers();
-      var workId = $('*[data-wikiload]').attr('data-wikiload');
+      var workId = $('#work_id').val();
       if ( workId.length ) {
           processWikidata.getWikiLocalName(workId);
       }
   },
 
-  bindEventHandlers: function() {
-    $('*[data-wikiload]').click(function() {
-      var e=$(this);
-      var workId = e.data('wikiload');
-      //processWikidata.getWikiLocalName(workId);
-    });
-  },
-  
   getWikiLocalName: function(workId) {
     var wikidataEndpoint = "https://query.wikidata.org/sparql?";
     var sparqlQuery = "SELECT ?entity WHERE {?entity wdt:P5331 \"" + workId + "\"}";

@@ -1,7 +1,11 @@
 //Knowledge Panel JS code
 
 $(document).ready(function () {
-  $(this).on('click','*[data-auth]',
+    $("body").tooltip({
+        selector: '[data-toggle="tooltip"]'
+    });
+    
+    $(this).on('click','*[data-auth]',
       function (event) {
         var e = $(this);
         //e.off('click');
@@ -117,7 +121,7 @@ $(document).ready(function () {
             var title = result["title_tesim"];
             var digitalURL = "http://digital.library.cornell.edu/catalog/"
               + id;
-            resultsHtml += "<li>" + generateExternalLinks(digitalURL, title, "Digital Library Collections") + "</li>";
+            resultsHtml += "<li>" + generateExternalLinks(digitalURL, title, "Digital Library Collections", "") + "</li>";
             var creator = [], creator_facet = [];
             if ("creator_tesim" in result)
               creator = result["creator_tesim"];
@@ -273,7 +277,7 @@ $(document).ready(function () {
                 var notableWorkLabel = binding["title"]["value"];
                 console.log("uri and label for notable work "
                     + notableWorkURI + ":" + notableWorkLabel);
-                notableHtmlArray.push(generateExternalLinks(notableWorkURI, notableWorkLabel, "Wikidata"));
+                notableHtmlArray.push(generateExternalLinks(notableWorkURI, notableWorkLabel, "Wikidata", ""));
               }
             }
             notableWorksHtml += notableHtmlArray.join("</li><li>")
@@ -294,9 +298,9 @@ $(document).ready(function () {
     // {?influenceFor wdt:P737 <" + wikidataURI + "> . SERVICE
     // wikibase:label { bd:serviceParam wikibase:language
     // \"[AUTO_LANGUAGE],en\". } } ORDER BY ASC(?influenceForLabel)";
-    var sparqlQuery = "SELECT ?influenceFor ?surname ?givenName ?surnameLabel ?givenNameLabel ( CONCAT(?surnameLabel, \", \" ,?givenNameLabel ) AS ?influenceForLabel ) WHERE { ?influenceFor wdt:P737 <"
+    var sparqlQuery = "SELECT ?influenceFor ?locUri ?surname ?givenName ?surnameLabel ?givenNameLabel ( CONCAT(?surnameLabel, \", \" ,?givenNameLabel ) AS ?influenceForLabel ) WHERE { ?influenceFor wdt:P737 <"
       + wikidataURI
-      + "> . ?influenceFor wdt:P734 ?surname . ?influenceFor wdt:P735 ?givenName . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }} ORDER BY ASC(?surnameLabel)"
+      + "> . ?influenceFor wdt:P734 ?surname . ?influenceFor wdt:P735 ?givenName . ?influenceFor wdt:P244 ?locUri . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }} ORDER BY ASC(?surnameLabel)"
 
       $.ajax({
         url : wikidataEndpoint,
@@ -323,7 +327,8 @@ $(document).ready(function () {
                 && "value" in binding["influenceForLabel"]) {
                   var iURI = binding["influenceFor"]["value"];
                   var iLabel = binding["influenceForLabel"]["value"];
-                  notableHtmlArray.push(generateExternalLinks(iURI, iLabel, "Wikidata"));
+                  var iLocUri = binding["locUri"]["value"] != undefined ? binding["locUri"]["value"] : "";
+                  notableHtmlArray.push(generateExternalLinks(iURI, iLabel, "Wikidata", iLocUri));
                 }
               }
               notableWorksHtml += notableHtmlArray.join("</li><li>")
@@ -344,9 +349,9 @@ $(document).ready(function () {
     // {<" + wikidataURI + "> wdt:P737 ?influencedBy . SERVICE
     // wikibase:label { bd:serviceParam wikibase:language
     // \"[AUTO_LANGUAGE],en\". } } ORDER BY ASC(?influencedByLabel)";
-    var sparqlQuery = "SELECT ?influencedBy ?surname ?givenName ?surnameLabel ?givenNameLabel ( CONCAT(?surnameLabel, \", \" ,?givenNameLabel ) AS ?influencedByLabel ) WHERE { <"
+    var sparqlQuery = "SELECT ?influencedBy ?locUri ?surname ?givenName ?surnameLabel ?givenNameLabel ( CONCAT(?surnameLabel, \", \" ,?givenNameLabel ) AS ?influencedByLabel ) WHERE { <"
       + wikidataURI
-      + "> wdt:P737 ?influencedBy . ?influencedBy wdt:P734 ?surname . ?influencedBy wdt:P735 ?givenName . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }} ORDER BY ASC(?surnameLabel)"
+      + "> wdt:P737 ?influencedBy . ?influencedBy wdt:P734 ?surname . ?influencedBy wdt:P735 ?givenName . ?influencedBy wdt:P244 ?locUri . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }} ORDER BY ASC(?surnameLabel)"
 
       $.ajax({
         url : wikidataEndpoint,
@@ -373,7 +378,8 @@ $(document).ready(function () {
                 && "value" in binding["influencedByLabel"]) {
                   var iURI = binding["influencedBy"]["value"];
                   var iLabel = binding["influencedByLabel"]["value"];
-                  notableHtmlArray.push(generateExternalLinks(iURI, iLabel, "Wikidata"));
+                  var iLocUri = binding["locUri"]["value"] != undefined ? binding["locUri"]["value"] : "";
+                  notableHtmlArray.push(generateExternalLinks(iURI, iLabel, "Wikidata", iLocUri));
                 }
               }
               notableWorksHtml += notableHtmlArray.join("</li><li>")
@@ -428,12 +434,22 @@ $(document).ready(function () {
   }
   
   //Create both search link and outbound to entity link
-  function generateExternalLinks(URI, label, sourceLabel) {
+  function generateExternalLinks(URI, label, sourceLabel, locUri) {
     var baseUrl = $("#itemDetails").attr("base-url");
     var keywordSearch = baseUrl + "catalog?q=" + label + "&search_field=all_fields";
     var title = "See " + sourceLabel;
-    return "<a data-toggle='tooltip' title='Search Library Catalog Info' data-placement='right' data-original-title='Search Library Catalog' href='" + keywordSearch + "'>" + label + "</a> " + 
-    "<a data-toggle='tooltip' title='" + title + "' data-placement='right' data-original-title='" + title + "' href='" + URI + "'><i class='fa fa-external-link'></i></a>";
+    var image = "wikidata";
+    var locHtml = "";
+    if ( locUri.length > 0 ) {
+        locHtml += "<a class='data-src' data-toggle='tooltip' data-placement='top' data-original-title='See Library of Congress' href='http://id.loc.gov/authorities/names/"
+                    + locUri + ".html'><img src='/assets/loc.png' /></a>"
+    }
+    if ( sourceLabel.indexOf("Digital") > -1 ) {
+        image = "dc";
+    }
+    return "<a data-toggle='tooltip' data-placement='top' data-original-title='Search Library Catalog' href='" 
+            + keywordSearch + "'>" + label + "</a> " + "<a class='data-src' data-toggle='tooltip' data-placement='top' data-original-title='" 
+            + title + "' href='" + URI + "'><img src='/assets/" + image +".png' /></a>" + locHtml
   }
 
 });

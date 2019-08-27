@@ -26,16 +26,6 @@
 	            Info
 	          </span>
 	          </a>
-			  <% if document["workid_display"].present? %>
-	            <%  work_id = document["workid_display"][0] %>
-	            <div style="display:none">
-	              <a href='#' role="button" tabindex = "0" data-wikiload='<%= work_id  %>' id="wiki" class="info-button hidden-xs">
-		            <span class="label label-info">
-	                  Work Info
-	                </span>
-	              </a>
-	            </div>
-		      <% end %>
 	        <% end %>
           <% end %>
         <% elsif  solr_fname == 'subject_json'-%> 
