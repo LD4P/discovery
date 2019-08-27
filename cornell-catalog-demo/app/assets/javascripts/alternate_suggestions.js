@@ -8,6 +8,7 @@ var buildAlternateSuggestions = {
 
   // function checks each suggested search to display only those with > 0 catalog results
   checkSuggestions: function(suggestions) {
+    // first, the suggestions will be checked all at once with a faceted catalog solr query
     var facetList = '&facet.query=' + suggestions.join('&facet.query=')
     var solrQuery = "http://da-prod-solr8.library.cornell.edu/solr/ld4p2-blacklight/select?indent=on&wt=json&rows=0&q=*.*&facet=true" + facetList
     $.ajax({ // would be nice to pull url from env var rather than directly include it in code
@@ -16,43 +17,47 @@ var buildAlternateSuggestions = {
       dataType: 'jsonp',
       jsonp: 'json.wrf', // avoid CORS and CORB errors
       complete: function(response) {
-        // get suggestions from query return that have nonzero catalog result counts
-        var suggestionsWithFacetCounts = Object.keys(response["responseJSON"]["facet_counts"]["facet_queries"]);
-        // get zero-count suggestions using array subtraction
-        suggestionDiff = suggestions.filter(n => !suggestionsWithFacetCounts.includes(n));
-        // check zero-count suggestions with nonfaceted search
-        let x = buildAlternateSuggestions.doubleCheckSuggestions(suggestionDiff);
-        console.log("new: " + JSON.stringify(x));
-        // currently x placeholder is empty because I need to get asynchronicity sorted out...
-        // display the suggestions that have nonzero catalog result counts
-        buildAlternateSuggestions.displaySuggestions(suggestionsWithFacetCounts);
+        // suggestions from query return that have nonzero catalog result counts "survive" the check
+        var survivingSuggestions = Object.keys(response["responseJSON"]["facet_counts"]["facet_queries"]);
+        // use array subtraction to get zero-count (non-surviving) suggestions
+        var suggestionsToDoubleCheck = suggestions.filter(n => !survivingSuggestions.includes(n));
+        // double-check these zero-count suggestions with nonfaceted search requests
+        var ajaxRequests = buildAlternateSuggestions.ajaxRequestsForDoubleCheck(suggestionsToDoubleCheck);
+        var whenRequests = $.when.apply($, ajaxRequests); // run each double-check request
+        whenRequests.done(function( x ) {
+          $.each(arguments, function(index, responseData){
+            // when Ajax is done done, get JSON from responseData, an array of response info per request
+            var solrDoublecheckResults = responseData[2].responseJSON
+            // if there were more than zero catalog results, the suggestion has passed the double-check test
+            if (solrDoublecheckResults.response.numFound > 0) {
+              // add the passing search suggestion string into the list to be show to the user
+              survivingSuggestions.push(solrDoublecheckResults.responseHeader.params.q)
+            }
+          });
+          // display the suggestions that have nonzero catalog result counts
+          buildAlternateSuggestions.displaySuggestions(survivingSuggestions);
+        });
       }
-    });    
+    });
   },
 
-  // function will check each suggestion that didn't pass the previous check
-  doubleCheckSuggestions: async function(suggestions) {
-    let output = [] // suggestion strings that will be added to suggestionsWithFacetCounts in checkSuggestions
-    let unique = [...new Set(suggestions)]; // compel suggestion strings to be unique
-    
-    console.log("Suggestions to double check: " + JSON.stringify(unique));
+  // function creates an (unexecuted) solr catalog Ajax request promise for each unique string in a list of suggested searches
+  // these will be used by checkSuggestions() to double-check each suggestion that didn't pass the faceted catalog check
+  ajaxRequestsForDoubleCheck: function(suggestions) {
+    var requests = []; // function returns an array of other functions, each of which is an Ajax request
+    var unique = [...new Set(suggestions)]; // compell suggestion strings to be unique
     $.each(unique, function(i, val) {
       var solrQuery = "http://da-prod-solr8.library.cornell.edu/solr/ld4p2-blacklight/select?wt=json&rows=0&facet=false&q=" + val
-      $.ajax({
-        url: solrQuery,
-        type: 'GET',
-        dataType: 'jsonp',
-        jsonp: 'json.wrf', // avoid CORS and CORB errors
-        complete: function(response) {
-          console.log(val + ": " + JSON.stringify(response["responseJSON"]["response"]["numFound"]));
-          if (response["responseJSON"]["response"]["numFound"] > 0) {
-            output.push(val);
-          };
-          
-        }
-      });
+      requests.push( // add each Ajax request to the array
+        $.ajax({
+          url: solrQuery,
+          type: 'GET',
+          dataType: 'jsonp',
+          jsonp: 'json.wrf' // avoid CORS and CORB errors
+        })
+      );
     });
-    return output;
+    return requests;
   },
 
   makeAjaxCalls: function(q) {
