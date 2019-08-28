@@ -46,3 +46,4 @@
 //= require zz_inview.js
 //= require tooltip.js
 //= require integrateLinks.js
+//= require indexAdditionalSearch.js
