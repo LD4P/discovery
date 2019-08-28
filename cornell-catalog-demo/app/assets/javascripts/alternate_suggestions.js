@@ -173,3 +173,8 @@ var buildAlternateSuggestions = {
 
 };  
   
+Blacklight.onLoad(function() {
+  $('body.catalog-index').each(function() {
+    buildAlternateSuggestions.onLoad();
+  });
+});
