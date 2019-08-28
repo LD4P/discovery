@@ -338,22 +338,6 @@ var processDiscogs = {
       $('dl.dl-horizontal').append(the_html);
   },
 
-  barfrenderWikidataLegend: function(wikiURI) {
-      var dt_margin_top = "50px";
-      var dd_margin_top = "55px";
-
-      if ( $('dt#discogs-legend').length ) {
-        dt_margin_top = "10px";
-        dd_margin_top = "15px";
-      }
-      var the_html = '<dt class="blacklight-donor_display" style="margin-top:' + dt_margin_top + ';">'
-                  + '<div class="wikidata-bgc" style="width:40px;display:inline-block">&nbsp;</div></dt>'
-                  + '<dd class="blacklight-donor_display" style="margin-top:' + dd_margin_top + ';">'
-                  + '<a href="' + wikiURI + '" target="_blank">From the Wikidata entry <i class="fa fa-external-link"></i></a></dd>';
-
-      $('dl.dl-horizontal').append(the_html);
-  },
-
   getWikidata: function(master_id) {
     var wikidataEndpoint = "https://query.wikidata.org/sparql?";
   	var sparqlQuery = "SELECT ?entity ?followsLabel ?followedByLabel " 
