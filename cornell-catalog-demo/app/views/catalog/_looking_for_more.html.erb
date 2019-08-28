@@ -5,3 +5,9 @@
 <% if params[:q_row].present? %>
   <%= render :partial => 'expand_advanced_search' %>
 <% end %>
+
+
+<% #if facet_field_in_params? field -%>
+<% if facet_field_in_params?("fast_topic_facet") %>
+  <%= render :partial => 'digital_collections_search' %>
+<% end %>
