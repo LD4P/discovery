@@ -12,6 +12,7 @@
   <input type="hidden" id="other_tile" value="<%= @document['title_other_display'].join(" ") if @document['title_other_display'].present? %>">
   <% 	author_json_parsed = @document['author_json'].present? ? ActiveSupport::JSON.decode(@document['author_json'][0]) : "" %>
   <input type="hidden" id="author" value="<%= author_json_parsed["search1"] %>">
+  <input type="hidden" id="format" value="<%= @document['format_main_facet'] %>">
   <div id="doc_<%= @document.id.to_s.parameterize %>">
     <% # bookmark/folder functions -%>
       <div class="document-header">
