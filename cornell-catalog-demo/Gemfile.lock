@@ -322,6 +322,8 @@ GEM
       actionpack (>= 3.0.0)
       activesupport (>= 3.0.0)
     language_list (1.2.1)
+    leaflet-rails (1.5.1)
+      rails (>= 4.2.0)
     libnotify (0.9.4)
       ffi (>= 1.0.11)
     library_stdnums (1.6.0)
@@ -638,6 +640,7 @@ DEPENDENCIES
   jquery-ui-rails (= 5.0.5)
   json
   kaminari (= 0.15.0)
+  leaflet-rails
   libnotify
   marc
   meta_request
