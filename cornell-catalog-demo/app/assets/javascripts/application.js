@@ -12,7 +12,7 @@
 //
 //= require jquery
 //= require bootstrap-sprockets
-
+//= require leaflet
 
 
 
@@ -36,6 +36,8 @@
 //= require spin.min.js
 //= require jquery.spin.js
 
+
+//= require narrativeLocation.js
 //= require print_button.js
 //= require pops.js
 //= require wikidata.js
@@ -47,3 +49,4 @@
 //= require zz_inview.js
 //= require tooltip.js
 //= require integrateLinks.js
+//= require indexAdditionalSearch.js

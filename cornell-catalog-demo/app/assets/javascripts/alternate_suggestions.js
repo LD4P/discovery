@@ -167,7 +167,7 @@ var buildAlternateSuggestions = {
                              + val 
                              + "</a></li>";
           });
-          $("div.expand-search").append(opening_html + list_html + closing_html);
+          $("#expanded-search").append(opening_html + list_html + closing_html);
       }
   }
 
