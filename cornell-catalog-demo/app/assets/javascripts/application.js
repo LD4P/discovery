@@ -47,3 +47,4 @@
 //= require tooltip.js
 //= require integrateLinks.js
 //= require indexAdditionalSearch.js
+//= require narrativeLocation.js
