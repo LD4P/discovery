@@ -39,6 +39,7 @@
 //= require print_button.js
 //= require pops.js
 //= require wikidata.js
+//= require discogs.js
 //= require jquery.anchorscroll.js
 //= require browse_placeholder.js
 //= alternate_suggestions.js

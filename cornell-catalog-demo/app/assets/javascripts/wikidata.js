@@ -1,20 +1,12 @@
 var processWikidata = {
   onLoad: function() {
-      this.bindEventHandlers();
-      var workId = $('*[data-wikiload]').attr('data-wikiload');
+      var workId = $('#work_id').val();
       if ( workId.length ) {
           processWikidata.getWikiLocalName(workId);
       }
+      $.extend
   },
 
-  bindEventHandlers: function() {
-    $('*[data-wikiload]').click(function() {
-      var e=$(this);
-      var workId = e.data('wikiload');
-      //processWikidata.getWikiLocalName(workId);
-    });
-  },
-  
   getWikiLocalName: function(workId) {
     var wikidataEndpoint = "https://query.wikidata.org/sparql?";
     var sparqlQuery = "SELECT ?entity WHERE {?entity wdt:P5331 \"" + workId + "\"}";
@@ -32,9 +24,7 @@ var processWikidata = {
             processWikidata.getWikiDerivatives(URI);
             processWikidata.getWikiEditions(URI);
             processWikidata.getNarrativeLocations(URI);
-        } 
-        else {
-          console.log("woe is me");
+            processWikidata.getWikiLocId(URI); 
         }
       }
     });
@@ -91,7 +81,7 @@ var processWikidata = {
 						}
 					}
 					notableWorksHtml = notableWorksOpeningHtml + notableHtmlArray.join("</div>") + notableWorksClosingHtml;
-					console.log(notableWorksHtml);
+					// console.log(notableWorksHtml);
 					$("#availability-panel").after(notableWorksHtml);
 				}
 			}
@@ -107,7 +97,6 @@ var processWikidata = {
   	                  + "OPTIONAL {?derivative wdt:P31 ?instanceType .} OPTIONAL { ?derivative wdt:P577 ?pub_date . } "
   	                  + "SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }}"
   	                  + "GROUP BY ?derivative ?title ?instanceTypeLabel";
-    console.log(sparqlQuery);
   	$.ajax({
   		url : wikidataEndpoint,
   		headers : {
@@ -156,7 +145,7 @@ var processWikidata = {
   						}
   					}
 					derivativesHtml = derivativesOpeningHtml + derivativesHtmlArray.join("</div>") + derivativesClosingHtml;
-					console.log(derivativesHtml);
+					// console.log(derivativesHtml);
 					$("#availability-panel").after(derivativesHtml);
   				}
   			}
@@ -164,6 +153,50 @@ var processWikidata = {
   	});	
   },
   
+  // gets the Library of Congress name authority URI for a work or person,
+  getWikiLocId: function(wikiURI) {
+    var wikidataEndpoint = "https://query.wikidata.org/sparql?";
+    var sparqlQuery = "SELECT ?locID WHERE {<" + wikiURI + "> wdt:P244 ?locID . }";
+    $.ajax({
+  	  url : wikidataEndpoint,
+  	  headers : {
+  	  	Accept : 'application/sparql-results+json'
+  	  },
+  	  data : {
+  	  	query : sparqlQuery
+  	  },
+  	  success : function(data) {
+  	  	if ( data && "results" in data && "bindings" in data["results"] ) {
+  		  var bindings = data["results"]["bindings"];
+		  if ( "locID" in bindings[0] ) {    		  
+            locId = bindings[0]["locID"]["value"];
+            processWikidata.getLocData(locId);
+          }
+        }
+      } 
+    });
+  },
+
+  getLocData: function(locID) {
+      var authorityUrl = "https://lookup.ld4l.org/authorities/show/linked_data/loc/names/" + locID;
+      $.ajax({
+        url : authorityUrl,
+  	    type: 'GET',
+     	dataType: 'json',
+     	complete: function(xhr, status) {
+          var results = $.parseJSON(xhr.responseText);
+  		  if ( !jQuery.isEmptyObject(results) ) {
+  			var label = results["label"][0].replace(". ",". | ");
+  			// var format = $('input#format').val();
+  			var href = '/browse?utf8=%E2%9C%93&authq=' + label.replace(" ","+") + '&start=0&browse_type=Subject'
+  			var browseHtml = '<div style="margin-top:-25px;"><h3><a href="' + href + '">Browse related items by subject</a></h3></div>';
+            $('div.browse-call-number').append("<h4>- or -</h4>");
+            $('div.browse-call-number').after(browseHtml);
+          }
+     	}
+      });
+  },
+    
   getWikiEntity: function(uri) {
     var localName = uri.split("/").pop();
     $.ajax({
@@ -217,8 +250,8 @@ var processWikidata = {
                 fieldValue.push(narrativeLocationLabel);
               }
             }
-            $("#itemDetails").append(processWikidata.generateItemViewRow(fieldName, fieldValue.join("<br/>")));
-                
+            $("#itemDetails").append(processWikidata.generateItemViewRow(fieldName, fieldValue.join("<br/>"), wikidataURI));
+            renderWikidataLegend(wikidataURI);
           }
         }
    
@@ -226,14 +259,17 @@ var processWikidata = {
     });
   },
   
-  generateItemViewRow: function(fieldName, fieldValue) {
+  generateItemViewRow: function(fieldName, fieldValue, wikidataURI) {
     var fieldNameId = fieldName.replace(/\s/g, '');
-    return  "<dt class='blacklight-" + fieldNameId + "'>" + fieldName + "</dt>"
+    return  "<dt class='blacklight-" + fieldNameId + "'><span  class='wikidata-bgc'>" + fieldName + ":</span></dt>"
     + "<dd class='blacklight-" + fieldNameId + "'>" + fieldValue + "</dd>";
+    
   },
+  
   retrieveFASTString: function(fastURI) {
     //An AJAX request that 
   }
+  
 };  
 Blacklight.onLoad(function() {
   if ( $('body').prop('className').indexOf("catalog-show") >= 0 ) {
