@@ -2,7 +2,8 @@ var buildAlternateSuggestions = {
   onLoad: function() {
     var q = $('input#q').val();
     if (q.length) {
-        this.makeAjaxCalls(q);
+      this.gatherSuggestions(q);
+        //this.makeAjaxCalls(q);
     }
   },
 
@@ -58,6 +59,48 @@ var buildAlternateSuggestions = {
       );
     });
     return requests;
+  },
+
+  gatherSuggestions: function(q) {
+    var ajaxRequests = buildAlternateSuggestions.ajaxRequestsForSuggestedSearches(q); // get array of requests
+    var whenRequests = $.when.apply($, ajaxRequests); // run each request in the array
+    whenRequests.done(function(ld4l, dbpedia){
+      // join the arrays coming back from each Ajax request
+      joinedArrays = ld4l[0].concat(dbpedia[0]);
+
+      buildAlternateSuggestions.checkSuggestions(joinedArrays);
+    }).fail( function(d, textStatus, error) {
+      console.error("getJSON failed, status: " + textStatus + ", error: "+error)
+    });
+  },
+
+  // set up ajax requests and return them
+  ajaxRequestsForSuggestedSearches: function(q) {  
+
+    var ld4lRequest = $.ajax({
+      url: 'https://lookup.ld4l.org/authorities/search/linked_data/locsubjects_ld4l_cache?&maxRecords=8&q=' + q.replace(/ /g, "+"), 
+      type: 'GET',
+      dataType: 'json',
+      dataFilter: function(retData) {
+        var parseReturn = $.parseJSON(retData);
+        var suggestions = parseReturn.map(x => x.label);
+        return JSON.stringify(suggestions);
+      }
+    });
+
+    var dbpediaRequest = $.ajax({
+      url: 'http://lookup.dbpedia.org/api/search/KeywordSearch?MaxHits=8&QueryString=' + q.replace(/ /g, "+"), 
+      type: 'GET',
+      dataType: 'json',
+      dataFilter: function(retData) {
+        var parseReturn = $.parseJSON(retData)
+        var suggestions = parseReturn.results.map(x => x.label);
+        return JSON.stringify(suggestions);
+      }
+    });
+
+    // return the requests as an array
+    return [ld4lRequest, dbpediaRequest];
   },
 
   makeAjaxCalls: function(q) {
