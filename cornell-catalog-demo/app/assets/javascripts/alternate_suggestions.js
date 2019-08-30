@@ -64,7 +64,13 @@ var buildAlternateSuggestions = {
   gatherSuggestions: function(q) {
     var ajaxRequests = buildAlternateSuggestions.ajaxRequestsForSuggestedSearches(q); // get array of requests
     var whenRequests = $.when.apply($, ajaxRequests); // run each request in the array
-    whenRequests.done(function(ld4l, dbpedia){
+    whenRequests.done(function(ld4l, dbpedia, wikidata){
+      // process WikiData response
+      var wikidataFiltered = wikidata[0].search.filter(function(item) {buildAlternateSuggestions.retainLabel(q, item.label, item.description)})
+      var wikidataMapArray = wikidata[0].search.map(x => x.label);
+      console.log(mapped);
+
+
       // join the arrays coming back from each Ajax request
       joinedArrays = ld4l[0].concat(dbpedia[0]);
 
@@ -105,21 +111,12 @@ var buildAlternateSuggestions = {
     var wikidataRequest = $.ajax({
       url: 'https://www.wikidata.org/w/api.php?action=wbsearchentities&type=item&format=json&language=en&limit=8&search=' + q.replace(/ /g, "+"),
       type: 'GET',
-      crossDomain: true,
-      dataType: 'jsonp',
-      dataFilter: function(retData, other) {
-        console.log("Wikidata grab")
-        console.log(other);
-        console.log(retData);
-        console.log($.parseJSON(retData));
-
-        return '{"test":"string"}'
-      }
+      dataType: 'jsonp'
     });
 
     // return the requests as an array
-    //return [ld4lRequest, dbpediaRequest];
-    return [wikidataRequest]
+    return [ld4lRequest, dbpediaRequest, wikidataRequest];
+    //return [wikidataRequest]
   },
 
   makeAjaxCalls: function(q) {
