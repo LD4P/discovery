@@ -99,8 +99,27 @@ var buildAlternateSuggestions = {
       }
     });
 
+    // Per JavaScript: The Definitive Guide, pg 569, dataFilter is not invoked for cross-origin JSONP requests
+    // So I'll either have to connect to wikidate without the p, or find an alternative to dataFilter
+    // The alternative to JSONP might be CORS
+    var wikidataRequest = $.ajax({
+      url: 'https://www.wikidata.org/w/api.php?action=wbsearchentities&type=item&format=json&language=en&limit=8&search=' + q.replace(/ /g, "+"),
+      type: 'GET',
+      crossDomain: true,
+      dataType: 'jsonp',
+      dataFilter: function(retData, other) {
+        console.log("Wikidata grab")
+        console.log(other);
+        console.log(retData);
+        console.log($.parseJSON(retData));
+
+        return '{"test":"string"}'
+      }
+    });
+
     // return the requests as an array
-    return [ld4lRequest, dbpediaRequest];
+    //return [ld4lRequest, dbpediaRequest];
+    return [wikidataRequest]
   },
 
   makeAjaxCalls: function(q) {
