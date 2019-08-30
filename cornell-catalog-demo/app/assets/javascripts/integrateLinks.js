@@ -101,8 +101,6 @@ $(document).ready(function () {
       url : lookupURL,
       dataType : 'json',
       success : function (data) {
-        console.log("success querying dig collections");
-        console.log(data);
         // Digital collection results, append
         var results = [];
         if ("response" in data && "docs" in data.response) {
@@ -111,6 +109,7 @@ $(document).ready(function () {
           var resultsHtml = "<div><ul class=\"explist-digitalresults\">";
           var authorsHtml = "<div><ul class=\"explist-digitalcontributers\">";
           var maxLen = 10;
+          var numberResults = results.length;
           var len = results.length;
           if (len > maxLen)
             len = maxLen;
@@ -140,11 +139,15 @@ $(document).ready(function () {
           }
 
           resultsHtml += "</ul><button id=\"expnext-digitalresults\">&#x25BD; more</button></div>";
-          var displayHtml = "<div><h4>Digital Collections Results</h4>"
+          var displayHtml = "";
+          //Only display this section if there are any digital collection results
+          if(numberResults > 0) {
+            displayHtml += "<div><h4>Digital Collections Results</h4>"          
             + resultsHtml
             + "<h4>Related Digital Collections Contributors</h4>"
             + authorsHtml
             + "</ul><button id=\"expnext-digitalcontributers\">&#x25BD; more</button></div>";
+          }  
           $("#digitalCollectionsContent").append(displayHtml);
           listExpander('digitalresults');
           listExpander('digitalcontributers');
@@ -256,9 +259,6 @@ $(document).ready(function () {
         query : sparqlQuery
       },
       success : function (data) {
-
-        console.log("Notable works ");
-        console.log(data);
         if (data && "results" in data
             && "bindings" in data["results"]) {
           var bindings = data["results"]["bindings"];

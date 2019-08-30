@@ -62,7 +62,7 @@ function searchDigitalCollectionFacet(facetName, facetValue, baseUrl) {
 }
 
 function generateLink(URI, label) {
-  return label  + " <a  target='_blank' title='" + label + "' href='" + URI + "'><i class='fa fa-external-link'></i></a>";
+  return label  + " <a class='data-src' target='_blank' title='" + label + "' href='" + URI + "'><img src='/assets/dc.png' /></a>";
 }
 
 
