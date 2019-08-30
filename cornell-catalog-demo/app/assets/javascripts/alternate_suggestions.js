@@ -62,29 +62,16 @@ var buildAlternateSuggestions = {
   },
 
   gatherSuggestions: function(q) {
-    var ajaxRequests = buildAlternateSuggestions.ajaxRequestsForSuggestedSearches(q); // get array of requests
+    var ajaxRequests = buildAlternateSuggestions.ajaxRequestsForSuggestedSearches(q); // get array of Ajax request promises
     var whenRequests = $.when.apply($, ajaxRequests); // run each request in the array
-    whenRequests.done(function(ld4l, dbpedia, wikidata){
-      // process WikiData response
-      var wikidataFiltered = wikidata[0].search.filter(function(item) {return buildAlternateSuggestions.retainLabel(q, item.label, item.description)})
-      var wikidataMapArray = wikidataFiltered.map(x => x.label);
-      console.log("WikiData suggestions: " + wikidataMapArray);
-      // process LD4L response
-      var ld4lFiltered = ld4l[0].filter(function(item) {return buildAlternateSuggestions.retainLabel(q, item.label, '')})
-      var ld4lMapArray = ld4lFiltered.map(x => x.label);
-      console.log("LD4L suggestions: " + ld4lMapArray);
-      //process DBpedia response
-      var dbpediaFiltered = dbpedia[0].results.filter(function(item) {return buildAlternateSuggestions.retainLabel(q, item.label, '')})
-      var dbpediaMapArray = dbpediaFiltered.map(x => x.label);
-      console.log("DBpedia suggestions: " + dbpediaMapArray);
-
-      // join the arrays coming back from each Ajax request
-      joinedArrays = ld4lMapArray.concat(dbpediaMapArray).concat(wikidataMapArray);
-
-      buildAlternateSuggestions.checkSuggestions(joinedArrays);
-    }).fail( function(d, textStatus, error) {
-      console.error("getJSON failed, status: " + textStatus + ", error: "+error)
-    });
+    whenRequests.done(function(ld4l, dbpedia, wikidata){ // when done running, process responses
+      var responseData = [ld4l[0], dbpedia[0].results, wikidata[0].search].flat(1) // array of somewhat-normalized response data
+      var filteredData = responseData.filter(function(item) { // filter out some search suggestions
+        return buildAlternateSuggestions.retainLabel(q, item.label, (item.description ? item.description : ''))
+      });
+      var labelStrings = filteredData.map(x => x.label); // extract the search suggestion strings from the rest of the data
+      buildAlternateSuggestions.checkSuggestions(labelStrings); // pass the labels to be checked as search suggestions
+    })
   },
 
   // set up ajax requests and return them
@@ -107,8 +94,7 @@ var buildAlternateSuggestions = {
         dataType: 'jsonp'
       }
     ];
-    // Return an array of Ajax promises
-    return ajaxParametersList.map(p => $.ajax(p));
+    return ajaxParametersList.map(p => $.ajax(p)); // return an array of Ajax promises
   },
   
   retainLabel: function(q, label, desc) {
