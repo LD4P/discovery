@@ -3,7 +3,6 @@ var buildAlternateSuggestions = {
     var q = $('input#q').val();
     if (q.length) {
       this.gatherSuggestions(q);
-        //this.makeAjaxCalls(q);
     }
   },
 
@@ -61,6 +60,7 @@ var buildAlternateSuggestions = {
     return requests;
   },
 
+  // get strings, via Ajax requests, that may be useful as search suggestions
   gatherSuggestions: function(q) {
     var ajaxRequests = buildAlternateSuggestions.ajaxRequestsForSuggestedSearches(q); // get array of Ajax request promises
     var whenRequests = $.when.apply($, ajaxRequests); // run each request in the array
@@ -74,7 +74,7 @@ var buildAlternateSuggestions = {
     })
   },
 
-  // set up ajax requests and return them
+  // set up Ajax requests to three sources of search suggestion strings
   ajaxRequestsForSuggestedSearches: function(q) {
     var queryStringNoSpace = q.replace(/ /g, "+");
     var ajaxParametersList = [
