@@ -142,7 +142,9 @@ $(document).ready(function () {
           var displayHtml = "";
           //Only display this section if there are any digital collection results
           if(numberResults > 0) {
-            displayHtml += "<div><h4>Digital Collections Results</h4>"          
+            var digColSearchURL = "https://digital.library.cornell.edu/?q=" + authString + "&search_field=all_fields";
+            displayHtml += "<div><h4>Digital Collections Results " + 
+            "<a class='data-src' href='" + digColSearchURL + "' target='_blank'><img src='/assets/dc.png' /></a></h4>"          
             + resultsHtml
             + "<h4>Related Digital Collections Contributors</h4>"
             + authorsHtml
@@ -200,10 +202,13 @@ $(document).ready(function () {
         // Currently hide label 
         // For now, we are linking to items with authority files so we should have the label
         // Second, the label seems to be undefined in some cases
-        var contentHtml = "<section class=\"kp-flexrow\"><div><h3>Wikidata Info</h3></section>";
-        $("#wikidataContent").append(contentHtml);
+       
         // Get notable results
         if (wikidataURI != null) {
+          var contentHtml = "<section class=\"kp-flexrow\"><div><h3>Wikidata Info " + 
+          "<a href='" + wikidataURI + "' target='_blank' class='data-src'><img src='/assets/wikidata.png' /></a>" + 
+          "</h3></section>";
+          $("#wikidataContent").append(contentHtml);
           getImage(wikidataURI);
           getNotableWorks(wikidataURI);
           getPeopleInfluencedBy(wikidataURI);
@@ -441,14 +446,14 @@ $(document).ready(function () {
     var image = "wikidata";
     var locHtml = "";
     if ( locUri.length > 0 ) {
-        locHtml += "<a class='data-src' data-toggle='tooltip' data-placement='top' data-original-title='See Library of Congress' href='http://id.loc.gov/authorities/names/"
+        locHtml += "<a target='_blank' class='data-src' data-toggle='tooltip' data-placement='top' data-original-title='See Library of Congress' href='http://id.loc.gov/authorities/names/"
                     + locUri + ".html'><img src='/assets/loc.png' /></a>"
     }
     if ( sourceLabel.indexOf("Digital") > -1 ) {
         image = "dc";
     }
     return "<a data-toggle='tooltip' data-placement='top' data-original-title='Search Library Catalog' href='" 
-            + keywordSearch + "'>" + label + "</a> " + "<a class='data-src' data-toggle='tooltip' data-placement='top' data-original-title='" 
+            + keywordSearch + "'>" + label + "</a> " + "<a target='_blank' class='data-src' data-toggle='tooltip' data-placement='top' data-original-title='" 
             + title + "' href='" + URI + "'><img src='/assets/" + image +".png' /></a>" + locHtml
   }
 
