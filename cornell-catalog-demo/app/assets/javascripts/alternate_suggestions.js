@@ -66,13 +66,20 @@ var buildAlternateSuggestions = {
     var whenRequests = $.when.apply($, ajaxRequests); // run each request in the array
     whenRequests.done(function(ld4l, dbpedia, wikidata){
       // process WikiData response
-      var wikidataFiltered = wikidata[0].search.filter(function(item) {buildAlternateSuggestions.retainLabel(q, item.label, item.description)})
-      var wikidataMapArray = wikidata[0].search.map(x => x.label);
-      console.log(mapped);
-
+      var wikidataFiltered = wikidata[0].search.filter(function(item) {return buildAlternateSuggestions.retainLabel(q, item.label, item.description)})
+      var wikidataMapArray = wikidataFiltered.map(x => x.label);
+      console.log("WikiData suggestions: " + wikidataMapArray);
+      // process LD4L response
+      var ld4lFiltered = ld4l[0].filter(function(item) {return buildAlternateSuggestions.retainLabel(q, item.label, '')})
+      var ld4lMapArray = ld4lFiltered.map(x => x.label);
+      console.log("LD4L suggestions: " + ld4lMapArray);
+      //process DBpedia response
+      var dbpediaFiltered = dbpedia[0].results.filter(function(item) {return buildAlternateSuggestions.retainLabel(q, item.label, '')})
+      var dbpediaMapArray = dbpediaFiltered.map(x => x.label);
+      console.log("DBpedia suggestions: " + dbpediaMapArray);
 
       // join the arrays coming back from each Ajax request
-      joinedArrays = ld4l[0].concat(dbpedia[0]);
+      joinedArrays = ld4lMapArray.concat(dbpediaMapArray).concat(wikidataMapArray);
 
       buildAlternateSuggestions.checkSuggestions(joinedArrays);
     }).fail( function(d, textStatus, error) {
@@ -87,22 +94,17 @@ var buildAlternateSuggestions = {
       url: 'https://lookup.ld4l.org/authorities/search/linked_data/locsubjects_ld4l_cache?&maxRecords=8&q=' + q.replace(/ /g, "+"), 
       type: 'GET',
       dataType: 'json',
-      dataFilter: function(retData) {
-        var parseReturn = $.parseJSON(retData);
-        var suggestions = parseReturn.map(x => x.label);
-        return JSON.stringify(suggestions);
-      }
     });
 
     var dbpediaRequest = $.ajax({
       url: 'http://lookup.dbpedia.org/api/search/KeywordSearch?MaxHits=8&QueryString=' + q.replace(/ /g, "+"), 
       type: 'GET',
       dataType: 'json',
-      dataFilter: function(retData) {
-        var parseReturn = $.parseJSON(retData)
-        var suggestions = parseReturn.results.map(x => x.label);
-        return JSON.stringify(suggestions);
-      }
+    //  dataFilter: function(retData) {
+    //    var parseReturn = $.parseJSON(retData)
+    //    var suggestions = parseReturn.results.map(x => x.label);
+    //    return JSON.stringify(suggestions);
+    //  }
     });
 
     // Per JavaScript: The Definitive Guide, pg 569, dataFilter is not invoked for cross-origin JSONP requests
