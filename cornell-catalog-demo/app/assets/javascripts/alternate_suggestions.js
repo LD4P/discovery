@@ -88,37 +88,27 @@ var buildAlternateSuggestions = {
   },
 
   // set up ajax requests and return them
-  ajaxRequestsForSuggestedSearches: function(q) {  
-
-    var ld4lRequest = $.ajax({
-      url: 'https://lookup.ld4l.org/authorities/search/linked_data/locsubjects_ld4l_cache?&maxRecords=8&q=' + q.replace(/ /g, "+"), 
-      type: 'GET',
-      dataType: 'json',
-    });
-
-    var dbpediaRequest = $.ajax({
-      url: 'http://lookup.dbpedia.org/api/search/KeywordSearch?MaxHits=8&QueryString=' + q.replace(/ /g, "+"), 
-      type: 'GET',
-      dataType: 'json',
-    //  dataFilter: function(retData) {
-    //    var parseReturn = $.parseJSON(retData)
-    //    var suggestions = parseReturn.results.map(x => x.label);
-    //    return JSON.stringify(suggestions);
-    //  }
-    });
-
-    // Per JavaScript: The Definitive Guide, pg 569, dataFilter is not invoked for cross-origin JSONP requests
-    // So I'll either have to connect to wikidate without the p, or find an alternative to dataFilter
-    // The alternative to JSONP might be CORS
-    var wikidataRequest = $.ajax({
-      url: 'https://www.wikidata.org/w/api.php?action=wbsearchentities&type=item&format=json&language=en&limit=8&search=' + q.replace(/ /g, "+"),
-      type: 'GET',
-      dataType: 'jsonp'
-    });
-
-    // return the requests as an array
-    return [ld4lRequest, dbpediaRequest, wikidataRequest];
-    //return [wikidataRequest]
+  ajaxRequestsForSuggestedSearches: function(q) {
+    var queryStringNoSpace = q.replace(/ /g, "+");
+    var ajaxParametersList = [
+      {
+        url: 'https://lookup.ld4l.org/authorities/search/linked_data/locsubjects_ld4l_cache?&maxRecords=8&q=' + queryStringNoSpace, 
+        type: 'GET',
+        dataType: 'json'
+      },
+      {
+        url: 'http://lookup.dbpedia.org/api/search/KeywordSearch?MaxHits=8&QueryString=' + queryStringNoSpace, 
+        type: 'GET',
+        dataType: 'json'
+      },
+      {
+        url: 'https://www.wikidata.org/w/api.php?action=wbsearchentities&type=item&format=json&language=en&limit=8&search=' + queryStringNoSpace,
+        type: 'GET',
+        dataType: 'jsonp'
+      }
+    ];
+    // Return an array of Ajax promises
+    return ajaxParametersList.map(p => $.ajax(p));
   },
 
   makeAjaxCalls: function(q) {
