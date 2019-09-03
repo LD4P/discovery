@@ -27,7 +27,6 @@ var processDiscogs = {
         var publisher_nbr = $('#publisher_nbr').val();
         var other_tile = $('#other_tile').val();
         var author = $('#author').val();
-        console.log("initial author = " + author);
         // if the author_json value contains partial or full date range, eliminate it
         if ( author[author.length -1] == "-" || author[author.length -6] == "-") {
             author = author.substring(0, author.lastIndexOf(","));
@@ -41,18 +40,10 @@ var processDiscogs = {
         else {
             author = author.replace(/\./g, "");
         }
-        console.log("title_resp = " + title_resp);
-        console.log("title = " + title);
-        console.log("subtitle = " + subtitle);
-        console.log("pub_date = " + pub_date);
-        console.log("publisher = " + publisher);
-        console.log("publisher_nbr = " + publisher_nbr);
-        console.log("other_tile = " + other_tile);
-        console.log("author = " + author);
         // The Naxos recordings never match Discogs, so don't do anything for those.
         if ( publisher.indexOf("Naxos") == -1 ) {
           var queryStr = this.buildSearchQueryString(title_resp, title, subtitle, pub_date, publisher, publisher_nbr, other_tile, author, single_author);
-          console.log("query string = " + queryStr);
+          // console.log("query string = " + queryStr);
           this.makeSearchAjaxCall(queryStr, title);
         }
     }
@@ -66,7 +57,6 @@ var processDiscogs = {
       if ( author.length > 0 ) {
         // if the author name is in the title, we only need the latter but only in the case of a single author
         // reverse last name, first name
-        console.log("single_author = " + single_author);
         if ( single_author ) { 
           var first_last = author.substring(author.indexOf(",") + 2, author.length) + " " + author.substring(0, author.indexOf(","))
           if ( title.indexOf(first_last) == -1 && subtitle.indexOf(first_last) == -1) {
@@ -84,7 +74,13 @@ var processDiscogs = {
         }
       }
       else {
-          queryStr = title_resp + "+" + title;
+          // if we have a publisher nbr, don't use the title; if we don't, use the title responsibility
+          if ( publisher_nbr.length == 0 ) {
+              queryStr = title_resp + "+" + title;
+          }
+          else {
+              queryStr = title;
+          }
       }
       if ( subtitle.length > 0 ) {
           queryStr += "+" + subtitle ;
@@ -114,14 +110,9 @@ var processDiscogs = {
    	  complete: function(xhr, status) {
        	var results = $.parseJSON(xhr.responseText);
 		if ( results.length > 0 ) {
-			console.log("discogs id = " + results[0]["id"]);
-			// console.log("results = " + JSON.stringify(results));
-			// *** Add a check: make sure the title is in the label field returned by discogs
 			var discogs_id = results[0]["id"];
 			var imageUrl = results[0]["context"]["Image URL"][0];
 			var label = results[0]["label"];
-			console.log("discogs label= " + label);
-			console.log("indexOf title = " + label.toLowerCase().indexOf(title.toLowerCase()));
 			if ( label.toLowerCase().indexOf(title.toLowerCase()) >= 0 ) {
 			    $("#discogs-image").append("<img src='" + imageUrl + "' width='150px'/>");
 			    processDiscogs.makeShowAjaxCall(discogs_id);
@@ -141,12 +132,12 @@ var processDiscogs = {
    	  complete: function(xhr, status) {
        	var results = $.parseJSON(xhr.responseText);
 		if ( results != undefined ) {
-    	    //console.log("results = " + JSON.stringify(results));
-    	    console.log("master_id = " + results["master_id"]);
-//    	    if ( !processDiscogs.metadataCheck() ) 
-//    	        processDiscogs.buildMetadata(results);
             processDiscogs.discogsMetadataChecks(results);
-    	    
+    	    // Sometimes there won't be an author/artist listed in the catalog, but we'll get one back from Discogs.
+    	    // So store that in an input field and use it when we make the catalog call during the Wikidata portion.
+    	    // This name will prevent erroneous results coming back from the catalog.
+    	    artistHtml = '<input id="discogs-artist" value="' + results["artists"][0]["name"] + '" type="hidden">';
+    	    $('input#format').after(artistHtml);
     	    if ( results["master_id"] != undefined )
     	        processDiscogs.getWikidata(results["master_id"]);
         }
@@ -176,13 +167,17 @@ var processDiscogs = {
       }
       
       if ( !$('dt.blacklight-pub_info_display').length ) {
-          if ( results['year'] != undefined || results['labels'].length ) 
-                processDiscogs.renderPublished(results['year'], results['labels']);
+          if ( results['year'] != undefined || results['labels'].length ) {
+              var country = results["country"].length ? results["country"] : "";
+              processDiscogs.renderPublished(results['year'], results['labels'], country);
+          }
       }
       
       if ( !$('dt.blacklight-notes').length ) {
-          if ( results['notes'].length ) 
-                processDiscogs.renderNotes(results['notes']);            
+          if ( results['notes'].length ) {
+              var companies = results["companies"].length ? results["companies"] : [];  
+              processDiscogs.renderNotes(results['notes'], companies);
+          }
       }
       
       if ( !$('dt.blacklight-subject_json').length ) {
@@ -194,9 +189,12 @@ var processDiscogs = {
         processDiscogs.renderDiscogsLegend(results['uri']);      
   },
 
-  renderPublished: function(year, labels) {
+  renderPublished: function(year, labels, country) {
     var the_html = '<dt class="blacklight-pub_info_display"><span class="discogs-bgc" style="padding:0 2px;">Published:</span></dt>'
                     + '<dd class="blacklight-pub_info_display">';
+    if ( country.length ) {
+        the_html += country + " : ";
+    }
     if ( labels.length ) {
         var prev_label = "";
       	$.each(labels, function(i, val) {
@@ -291,9 +289,20 @@ var processDiscogs = {
   	addDiscogsLegend = true;
   },
 
-  renderNotes: function(notes) {
+  renderNotes: function(notes, companies) {
+      var companiesStr = "";
+
+      if ( notes.toLowerCase().indexOf("recorded") == -1 ) {
+          $.each(companies, function(i, val) {
+              // Do we have a Recorded At company? and is that location not already mentioned in the notes?
+              if ( val["entity_type_name"] == "Recorded At" ) {
+          	    companiesStr = "<br/>Recorded at " + val["name"];
+          	  }
+          });          
+      }
+
       var the_html = '<dt class="blacklight-notes"><span class="discogs-bgc" style="padding:0 2px;">Notes:</span></dt>';
-      the_html += '<dd class="blacklight-notes">' + notes + "</dd>";
+      the_html += '<dd class="blacklight-notes">' + notes + companiesStr + "</dd>";
       $('dl.dl-horizontal').append(the_html); 
       addDiscogsLegend = true;
   },
@@ -397,7 +406,7 @@ var processDiscogs = {
   },
   
   checkTheCatalog: function(title, type) {
-      var author = $("#author").val();
+      var author = $("#author").val().length ? $("#author").val() : $("#discogs-artist").val();
       var solrUrl = "http://da-prod-solr8.library.cornell.edu/solr/ld4p2-blacklight/select?";
       var catalog_id = "";
       $.ajax({
