@@ -457,7 +457,7 @@ $(document).ready(function () {
 //Workings of "show more" links on knowledge panel lists
 function listExpander(domString) {
   var list = $(".explist-" + domString + " li");
-  var numToShow = 3;
+  var numToShow = 10;
   var button = $("#expnext-" + domString);
   var numInList = list.length;
   list.hide();
