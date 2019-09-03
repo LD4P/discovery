@@ -139,12 +139,12 @@ $(document).ready(function () {
             }
           }
 
-          resultsHtml += "</ul><button id=\"expnext-digitalresults\">&#x25BD; more</button></div>";
+          resultsHtml += "</ul><button id=\"expnext-digitalresults\">&#x25BD; more</button><button id=\"expless-digitalresults\">&#x25B3; less</button></div>";
           var displayHtml = "<div><h4>Digital Collections Results</h4>"
             + resultsHtml
             + "<h4>Related Digital Collections Contributors</h4>"
             + authorsHtml
-            + "</ul><button id=\"expnext-digitalcontributers\">&#x25BD; more</button></div>";
+            + "</ul><button id=\"expnext-digitalcontributers\">&#x25BD; more</button><button id=\"expless-digitalcontributers\">&#x25B3; less</button></div>";
           $("#digitalCollectionsContent").append(displayHtml);
           listExpander('digitalresults');
           listExpander('digitalcontributers');
@@ -281,7 +281,7 @@ $(document).ready(function () {
               }
             }
             notableWorksHtml += notableHtmlArray.join("</li><li>")
-            + "</li></ul><button id=\"expnext-notable\">&#x25BD; more</button></div>";
+            + "</li></ul><button id=\"expnext-notable\">&#x25BD; more</button><button id=\"expless-notable\">&#x25B3; less</button></div>";
             $("#wikidataContent").append(notableWorksHtml);
           }
         }
@@ -332,7 +332,7 @@ $(document).ready(function () {
                 }
               }
               notableWorksHtml += notableHtmlArray.join("</li><li>")
-              + "</li></ul><button id=\"expnext-influencedby\">&#x25BD; more</button></div>";
+              + "</li></ul><button id=\"expnext-influencedby\">&#x25BD; more</button><button id=\"expless-influencedby\">&#x25B3; less</button></div>";
               $("#wikidataContent").append(notableWorksHtml);
             }
           }
@@ -383,7 +383,7 @@ $(document).ready(function () {
                 }
               }
               notableWorksHtml += notableHtmlArray.join("</li><li>")
-              + "</li></ul><button id=\"expnext-whoinfluenced\">&#x25BD; more</button></div>";
+              + "</li></ul><button id=\"expnext-whoinfluenced\">&#x25BD; more</button><button id=\"expless-whoinfluenced\">&#x25B3; less</button></div>";
               $("#wikidataContent").append(notableWorksHtml);
               //$('[data-toggle="tooltip"]').tooltip();
             }
@@ -458,21 +458,29 @@ $(document).ready(function () {
 function listExpander(domString) {
   var list = $(".explist-" + domString + " li");
   var numToShow = 10;
-  var button = $("#expnext-" + domString);
+  var moreButton = $("#expnext-" + domString);
+  var lessButton = $("#expless-" + domString);
   var numInList = list.length;
   list.hide();
   if (numInList > numToShow) {
-    button.show();
+    moreButton.show();
   }
   list.slice(0, numToShow).show();
 
-  button.click(function () {
+  moreButton.click(function () {
     var showing = list.filter(':visible').length;
     list.slice(showing - 1, showing + numToShow).fadeIn();
     var nowShowing = list.filter(':visible').length;
     if (nowShowing >= numInList) {
-      button.hide();
+      moreButton.hide();
     }
+    lessButton.show();
+  });
+  lessButton.click(function () {
+    var showing = list.filter(':visible').length;
+    list.slice(numToShow, showing+1).fadeOut('fast');
+    lessButton.hide();
+    moreButton.show();
   });
 };
 
