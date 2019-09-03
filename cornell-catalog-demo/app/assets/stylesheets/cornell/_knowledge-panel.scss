@@ -42,3 +42,14 @@
   font-size: smaller;
   display: none;
 }
+
+// Truncate long titles with ellipsis
+.kp-content li > a {
+  vertical-align: top;
+  display: inline-block; 
+  max-width: 24em; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  white-space: nowrap;
+  margin: 0;
+}
