@@ -77,7 +77,9 @@ var processWikidata = {
                                 notableWorkPubDate = " (" + binding["pub_date"]["value"].substring(0, 4) + ")";
                             }
                 //console.log("uri and label for edition work " + notableWorkURI + ": " + notableWorkLabel + notableWorkPubDate);
-                notableHtmlArray.push("<div class='other-form'><span class='other-form-title'><a href='" + notableWorkURI + "'>" + notableWorkLabel + notableWorkPubDate + "</a></span>");
+                notableHtmlArray.push("<div class='other-form'><span class='other-form-title'>" + notableWorkLabel + notableWorkPubDate 
+                                        + "<a class='data-src' data-toggle='tooltip' data-placement='top' data-original-title='See Wikidata' href='" 
+                                        + notableWorkURI + "'><img src='/assets/wikidata.png'></a></span>");
             }
           }
           notableWorksHtml = notableWorksOpeningHtml + notableHtmlArray.join("</div>") + notableWorksClosingHtml;
@@ -141,7 +143,8 @@ var processWikidata = {
                                 derivativesPubDate = binding["date"]["value"].substring(0, 4);
                             }
               //  console.log("uri and label for derivative work " + derivativesURI + ": " + derivativesLabel);
-                derivativesHtmlArray.push("<div class='other-form'><span class='other-form-title'><a href='" + derivativesURI + "'>" + derivativesLabel + " (" + derivativesPubDate + " " + instanceTypeLabel  + ") </a></span>");
+                derivativesHtmlArray.push("<div class='other-form'><span class='other-form-title'>" + derivativesLabel + " (" + derivativesPubDate + " " + instanceTypeLabel  
+                                        + ")<a class='data-src' data-toggle='tooltip' data-placement='top' data-original-title='See Wikidata' href='" + derivativesURI + "'><img src='/assets/wikidata.png'></a></span>");
               }
             }
           derivativesHtml = derivativesOpeningHtml + derivativesHtmlArray.join("</div>") + derivativesClosingHtml;
