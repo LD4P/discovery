@@ -2,7 +2,7 @@ var buildAlternateSuggestions = {
   onLoad: function() {
     var q = $('input#q').val();
     if (q.length) {
-        this.makeAjaxCalls(q);
+      this.gatherSuggestions(q);
     }
   },
 
@@ -60,76 +60,41 @@ var buildAlternateSuggestions = {
     return requests;
   },
 
-  makeAjaxCalls: function(q) {
-    console.log("makeAjaxCalls");
-    var results = [];
-    var dbp_done = false;
-    var wiki_done = false;
-    $.ajax({
-        url: 'https://www.wikidata.org/w/api.php?action=wbsearchentities&type=item&format=json&language=en&limit=8&search=' + q.replace(/ /g, "+"), 
+  // get strings, via Ajax requests, that may be useful as search suggestions
+  gatherSuggestions: function(q) {
+    var ajaxRequests = buildAlternateSuggestions.ajaxRequestsForSuggestedSearches(q); // get array of Ajax request promises
+    var whenRequests = $.when.apply($, ajaxRequests); // run each request in the array
+    whenRequests.done(function(ld4l, dbpedia, wikidata){ // when done running, process responses
+      var responseData = [ld4l[0], dbpedia[0].results, wikidata[0].search].flat(1) // array of somewhat-normalized response data
+      var filteredData = responseData.filter(function(item) { // filter out some search suggestions
+        return buildAlternateSuggestions.retainLabel(q, item.label, (item.description ? item.description : ''))
+      });
+      var labelStrings = filteredData.map(x => x.label); // extract the search suggestion strings from the rest of the data
+      buildAlternateSuggestions.checkSuggestions(labelStrings); // pass the labels to be checked as search suggestions
+    })
+  },
+
+  // set up Ajax requests to three sources of search suggestion strings
+  ajaxRequestsForSuggestedSearches: function(q) {
+    var queryStringNoSpace = q.replace(/ /g, "+");
+    var ajaxParametersList = [
+      {
+        url: 'https://lookup.ld4l.org/authorities/search/linked_data/locsubjects_ld4l_cache?&maxRecords=8&q=' + queryStringNoSpace, 
         type: 'GET',
-        dataType: 'jsonp',
-     	complete: function(xhr, status) {
-            var json = xhr.responseJSON['search'];
-            var count = 0;
-            $.each(json, function() {
-                var label = this.label;
-                var desc = this.description;
-                if ( !desc ) {
-                    desc = "";
-                }
-                if ( buildAlternateSuggestions.retainLabel(q, label, desc) ) {
-                    results.push(label);
-                    count++;                    
-                }
-  		    });
-            console.log("Wikidata = " + count);
-            wiki_done = true;
-        } 
-    });
-    $.ajax({
-	    url: 'http://lookup.dbpedia.org/api/search/KeywordSearch?MaxHits=8&QueryString=' + q.replace(/ /g, "+"), 
+        dataType: 'json'
+      },
+      {
+        url: 'http://lookup.dbpedia.org/api/search/KeywordSearch?MaxHits=8&QueryString=' + queryStringNoSpace, 
         type: 'GET',
-        dataType: 'xml',
- 		success: function(xml) {
-            var count = 0;
- 		    $(xml).find('Result').each(function() {
-                var label = $(this).children('Label').text();
-                if ( buildAlternateSuggestions.retainLabel(q, label, "") ) {
-                    results.push(label);
-                    count++;                    
-                }
-            });
-            console.log("DBpedia = " + count);
-            dbp_done = true;
-        } 
-    });    
-    $.ajax({
-        url: 'https://lookup.ld4l.org/authorities/search/linked_data/locsubjects_ld4l_cache?&maxRecords=8&q=' + q.replace(/ /g, "+"), 
+        dataType: 'json'
+      },
+      {
+        url: 'https://www.wikidata.org/w/api.php?action=wbsearchentities&type=item&format=json&language=en&limit=8&search=' + queryStringNoSpace,
         type: 'GET',
-        dataType: 'json',
-     	complete: function(xhr, status) {
-            var json = $.parseJSON(xhr.responseText);
-            var count = 0;
-            $.each(json, function() {
-                var label = this.label;
-                if ( buildAlternateSuggestions.retainLabel(q, label, "") ) {
-                    results.push(label);
-                    count++;                    
-                }
-  		    });
-            console.log("LoC = " + count);
-            // once search suggestions come in from all sources, check them against the catalog
-            if ( wiki_done == true && dbp_done == true ) {
-                buildAlternateSuggestions.checkSuggestions(results);
-            }
-            else {
-                setTimeout(function() {
-                        buildAlternateSuggestions.checkSuggestions(results);
-                }, 1000)
-            }
-        } 
-    });
+        dataType: 'jsonp'
+      }
+    ];
+    return ajaxParametersList.map(p => $.ajax(p)); // return an array of Ajax promises
   },
   
   retainLabel: function(q, label, desc) {
