@@ -101,7 +101,8 @@ gem 'omniauth-saml'
 gem 'omniauth-google-oauth2', '~> 0.4.1'
 # Use Omniauth Facebook plugin
 gem 'omniauth-facebook', '~> 4.0'
-
+# To handle omniauth security
+gem "omniauth-rails_csrf_protection"
 gem 'bootstrap-sass'
 gem 'font-awesome-rails'
 gem 'blacklight_cornell_requests',:git =>'https://github.com/cul-it/blacklight-cornell-requests', :branch => 'master'
