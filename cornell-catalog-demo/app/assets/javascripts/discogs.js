@@ -74,13 +74,7 @@ var processDiscogs = {
         }
       }
       else {
-          // if we have a publisher nbr, don't use the title; if we don't, use the title responsibility
-          if ( publisher_nbr.length == 0 ) {
-              queryStr = title_resp + "+" + title;
-          }
-          else {
-              queryStr = title;
-          }
+          queryStr = title_resp + "+" + title;
       }
       if ( subtitle.length > 0 ) {
           queryStr += "+" + subtitle ;
@@ -113,16 +107,13 @@ var processDiscogs = {
 			var discogs_id = results[0]["id"];
 			var imageUrl = results[0]["context"]["Image URL"][0];
 			var label = results[0]["label"];
-			if ( label.toLowerCase().indexOf(title.toLowerCase()) >= 0 ) {
-			    $("#discogs-image").append("<img src='" + imageUrl + "' width='150px'/>");
-			    processDiscogs.makeShowAjaxCall(discogs_id);
-			}
+			processDiscogs.makeShowAjaxCall(discogs_id, title, imageUrl);
         }
    	  }
     });
   },
   
-  makeShowAjaxCall: function(discogs_id) {
+  makeShowAjaxCall: function(discogs_id, title, imageUrl) {
     var authorityUrl = "https://lookup.ld4l.org/authorities/show/discogs/release/" + discogs_id;
     //var results = [];
     $.ajax({
@@ -132,15 +123,19 @@ var processDiscogs = {
    	  complete: function(xhr, status) {
        	var results = $.parseJSON(xhr.responseText);
 		if ( results != undefined ) {
-            processDiscogs.discogsMetadataChecks(results);
+    	    var discogs_title = results["title"];
+    	    if ( discogs_title.toLowerCase().indexOf(title.toLowerCase()) >= 0 ) {
+        	    $("#discogs-image").append("<img src='" + imageUrl + "' width='150px'/>");
+                processDiscogs.discogsMetadataChecks(results);
+            }
     	    // Sometimes there won't be an author/artist listed in the catalog, but we'll get one back from Discogs.
     	    // So store that in an input field and use it when we make the catalog call during the Wikidata portion.
     	    // This name will prevent erroneous results coming back from the catalog.
-    	    artistHtml = '<input id="discogs-artist" value="' + results["artists"][0]["name"] + '" type="hidden">';
+    	    var artistHtml = '<input id="discogs-artist" value="' + results["artists"][0]["name"] + '" type="hidden">';
     	    $('input#format').after(artistHtml);
     	    if ( results["master_id"] != undefined )
     	        processDiscogs.getWikidata(results["master_id"]);
-        }
+            }
    	  }
     });
   },
