@@ -65,7 +65,7 @@ var buildAlternateSuggestions = {
     var ajaxRequests = buildAlternateSuggestions.ajaxRequestsForSuggestedSearches(q); // get array of Ajax request promises
     var whenRequests = $.when.apply($, ajaxRequests); // run each request in the array
     whenRequests.done(function(ld4l, dbpedia, wikidata){ // when done running, process responses
-      var responseData = [ld4l[0], dbpedia[0].results, wikidata[0].search].flat(1) // array of somewhat-normalized response data
+      var responseData = ld4l[0].concat(dbpedia[0].results).concat(wikidata[0].search) // array of somewhat-normalized response data
       var filteredData = responseData.filter(function(item) { // filter out some search suggestions
         return buildAlternateSuggestions.retainLabel(q, item.label, (item.description ? item.description : ''))
       });
