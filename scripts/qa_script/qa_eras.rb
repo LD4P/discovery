@@ -9,6 +9,9 @@ require 'httparty'
 # sudo gem install httparty
 # ruby qa_eras.rb
 
+# Subject eras can be found here:
+# https://newcatalog.library.cornell.edu/catalog/facet/fast_era_facet?&q=*.*
+
 def get_eras
   # open and parse a file with one subject era per line
   return File.read('input.txt').split("\n")
@@ -34,7 +37,7 @@ end
 
 def write_file(era, qa_response)
   file = 'output.txt'
-  line = "#{era.ljust(30)}\t#{qa_response}"[0..130]+"\n" # limit output to 120 characters
+  line = "#{era.ljust(30)}\t#{qa_response}"[0..500]+"\n" # limit output to 120 characters
   File.write(file, line, mode: 'a')
   puts line # also display output lines in terminal
 end
