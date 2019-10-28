@@ -1,3 +1,13 @@
+These are all the subject eras from the Cornell Library catalog that have
+1.) exactly one result from the FAST search took for that date range, and
+2.) represents one hundred or more books in the library Catalog
+
+The idea is that these will be used as catagories in an era browse UI.
+
+John Skiles Skinner, October 2019
+
+---------------------------------
+
 1939 - 1945                   	[{"uri":"http://id.worldcat.org/fast/1355886","id":"1355886","label":"1939-1945"}]
 1914 - 1918                   	[{"uri":"http://id.worldcat.org/fast/1355873","id":"1355873","label":"1914-1918"}]
 1775 - 1783                   	[{"uri":"http://id.worldcat.org/fast/1355747","id":"1355747","label":"1775-1783"}]
