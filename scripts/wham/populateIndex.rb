@@ -6,8 +6,15 @@ require 'rsolr'
 require 'dotenv/load'
 
 
-# Load file
-def load_label_values(filename)
+# Load file (this expects the raw results from Solr with the facet values and counts)
+def load_label_values(filename)	
+  # This process will have to change with a large file
+  file = File.read(filename)
+	data_hash = JSON.parse(file)
+  authors = data_hash["facet_counts"]["facet_fields"]["author_facet"]
+  labels = authors.select.with_index { |_, i| i.even? }
+  counts = authors.select.with_index { |_, i| i.odd? }
+  update_info_for_labels(labels, "agent")
 end
 
 # Update info by looking up URI and getting additional info like variant labels
