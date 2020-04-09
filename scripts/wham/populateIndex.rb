@@ -6,6 +6,16 @@ require 'rsolr'
 require 'dotenv/load'
 
 
+
+#Load from JSON structured like {type:author, label: , rank: ..}
+def load_json_label_values(filename, unmatched_filename)
+  file = File.read(filename)
+	data = JSON.parse(file)
+  author_labels = data.select { |i| i["type"] == 'author' }
+  subject_labels = data.select { |i| i["type"] == 'subject' }
+  update_info_for_labels(author_labels, "agent", unmatched_filename)
+end
+
 # Load file (this expects the raw results from Solr with the facet values and counts)
 def load_label_values(filename)	
   # This process will have to change with a large file
@@ -14,20 +24,27 @@ def load_label_values(filename)
   authors = data_hash["facet_counts"]["facet_fields"]["author_facet"]
   labels = authors.select.with_index { |_, i| i.even? }
   counts = authors.select.with_index { |_, i| i.odd? }
-  update_info_for_labels(labels, "agent")
+  # Need to transform this into array of objects with "label" and "rank"
+  #update_info_for_labels(labels, "agent")
 end
 
 # Update info by looking up URI and getting additional info like variant labels
-# label_data = array of labels
-def update_info_for_labels(label_data, entity_type)
-  label_data.each { |label| 
+# label_data = array of objects with "label" as key and "rank" as key
+def update_info_for_labels(label_data, entity_type, unmatched_filename)
+  unmatched_labels = []
+  label_data.each { |info| 
+    label = info["label"]
     uri = retrieve_uri_for_label(label, entity_type)
     if(! uri.nil?)
+        puts uri
+        puts label
         labels = retrieve_variant_labels(uri, entity_type)
-    end
-    puts label
-    puts "Variants: " + labels.to_s
+        puts "Variants: " + labels.to_s
+    else
+      unmatched_labels << label
+    end    
   }
+  write_unmatched(unmatched_labels, unmatched_filename)
 end
 
 def retrieve_uri_for_label(label, entity_type)
@@ -70,13 +87,25 @@ def execute_query(auth, query)
   return results
 end
 
+# SPARQL queries
+#Variant label query
 def generate_agent_query(uri)
-  return "SELECT ?label WHERE {  <" + uri + "> <http://www.w3.org/2008/05/skos-xl#altLabel> ?label .  FILTER (isLiteral(?label))}"
+  return "SELECT ?label WHERE {  <" + uri + "> <http://www.w3.org/2004/02/skos/core#altLabel> ?label .}"
 end
+
+# Possibilities for separately obtaining Wikidata URIs for an LOC along with description 
+# See Also relationships will need to be pruned to remove any deprecated authorities
+
+# Looking up Wikidata
+
+
+# Looking up id.loc.gov suggest for any headings (name or subject etc.) that do not appear within the author index
+
+
 
 ## Lookupg URIs for a given label may involve more than one method
 def lookup_author_browse_index(label)
-  solr_url = ENV["AUTHOR_BROWSE_INDEX"] + "/select?q=authlabel_s:\"" + label + "\"&wt=json";
+  solr_url = ENV["AUTHOR_BROWSE_INDEX"] + "/select?q=authlabel_s:\"" + URI.encode(label) + "\"&wt=json";  
   url = URI.parse(solr_url)
   resp = Net::HTTP.get_response(url)
   data = resp.body
@@ -90,8 +119,31 @@ def lookup_author_browse_index(label)
   return nil
 end
 
+# Write unmatched labels to a file for later processing
+def write_unmatched(unmatched_labels, unmatched_filename)
+  File.open(unmatched_filename,"w") do |f|
+    f.write(JSON.pretty_generate(unmatched_labels))
+  end
+end
 #test_uri = "http://id.loc.gov/authorities/names/n79021164"
-test_label_data = ["Twain, Mark, 1835-1910"]
+#test_label_data = ["Twain, Mark, 1835-1910"]
 #retrieve_variant_labels(test_uri, "agent") 
 #lookup_author_browse_index(test_label)
-update_info_for_labels(test_label_data, "agent")
+#update_info_for_labels(test_label_data, "agent")
+
+# Method to start process of getting labels
+def process_facet_values(filename, unmatched_filename)
+  if(action_type == "load")
+    load_json_label_values(filename, unmatched_filename)
+  end
+  
+  if(action_type == "unmatched")
+    #query_unmatched(unmatched_filename)
+  end
+end
+
+action_type = ARGV[0]
+filename = ARGV[1]
+unmatched_filename = ARGV[2]
+
+process_facet_values(action_type, filename, unmatched_filename)
