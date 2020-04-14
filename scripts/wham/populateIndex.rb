@@ -67,7 +67,7 @@ def retrieve_uri_for_label(label, entity_type)
   	when "author"
   		uri = lookup_author(label) 
   	when "subject"
-  		uri = query_fast(label)
+  		uri = lookup_fast(label)
   	else
   end
   return uri
@@ -185,16 +185,38 @@ def get_lcnaf_uri_from_suggest(result)
 end
 
 # Subjects and Locations - query FAST
-def query_fast(label)
- topicFacet = "suggest50";
- fast_url = "http://fast.oclc.org/searchfast/fastsuggest?query=" + label + "&fl=" + topicFacet + "&queryReturn=id,*&rows=2&wt=json&json.wrf=?";
- #url = URI.parse(fast_url)
- #resp = Net::HTTP.get_response(url) 
- #data = resp.body
- #result = JSON.parse(data)
- nil
+def lookup_fast(label)
+	uri = nil
+	result = query_fast(label)
+	uri = get_uri_from_fast_result(result)
+	
 end
 
+def query_fast(label)
+ topicFacet = "suggest50";
+ label = "biology"
+ fast_url = "http://fast.oclc.org/searchfast/fastsuggest?query=" + label + "&fl=" + topicFacet + "&queryReturn=id,*&rows=10&wt=json";
+ url = URI.parse(fast_url)
+ resp = Net::HTTP.get_response(url) 
+ data = resp.body
+ result = JSON.parse(data) 
+end
+
+def get_uri_from_fast_result(result)
+  uri = nil
+  if (result.key?("response") && result["response"].key?("docs") && result["response"]["docs"].length > 0)
+    puts result.to_s
+  	id = result["response"]["docs"][0]["id"]
+  	puts id
+  	#remove fst at beginning of id
+  	puts id[3..-1]
+  	uri = "http://id.worldcat.org/fast/" + id[3..-1]
+  end
+  puts result.to_s
+  uri
+  #result.key?("response") 
+end
+ 
 # Write unmatched labels to a file for later processing
 def write_file(json_data, filename)
   File.open(filename,"w") do |f|
