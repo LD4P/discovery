@@ -30,35 +30,51 @@ end
 
 # Update info by looking up URI and getting additional info like variant labels
 # label_data = array of objects with "label" as key and "rank" as key
+# Packaging as 2000 documents as a time
 def update_info_for_labels(label_data, entity_type, unmatched_filename)
   unmatched_labels = []
   solr_documents = []
+  counter = 0
+  solr_counter = 0
   label_data.each { |info| 
+    counter = counter + 1 
     solr_data = {}
     label = info["label"]
     uri = retrieve_uri_for_label(label, entity_type)
     if(! uri.nil?)
         solr_data["uri"] = uri
+        solr_data["type"] = entity_type
         solr_data = solr_data.merge(info)
         labels = retrieve_variant_labels(uri, entity_type)
         if(labels.length > 0)
           solr_data["variants"] = labels
         end
         solr_documents << generate_solr_document(solr_data)
+        solr_counter = solr_counter + 1
     else
       unmatched_labels << label
-    end    
+    end   
+    
+    # As we iterate through labels, every 2000 solr documents, we write directly to the index
+    if solr_counter == 2000
+        puts counter
+    	write_file(unmatched_labels, unmatched_filename)
+  		update_suggest_index(solr_documents)
+  		# reset counter and arrays
+  		solr_counter = 0
+  		solr_documents = []
+  		umatched_labels = []
+    end
   } 
-  
-  puts solr_documents.to_s
-  puts unmatched_labels.to_s
-  #write_file(unmatched_labels, unmatched_filename)
-  
-  #This will be replaced once we handle real data, this is to keep track of solr documents being created
-  #write_file(solr_documents, "solrdocs.json")
-  
-  # Write documents to Solr
-  #update_suggest_index(solr_documents)
+ # IF there are any left over values in solr_documentsm write them out now
+  if (solr_documents.length > 0)
+    write_file(unmatched_labels, unmatched_filename) 
+   
+    # Write documents to Solr
+    update_suggest_index(solr_documents)
+  end
+ #This will be replaced once we handle real data, this is to keep track of solr documents being created
+    #write_file(solr_documents, "solrdocs.json") 
 end
 
 def retrieve_uri_for_label(label, entity_type)
@@ -77,8 +93,13 @@ def retrieve_variant_labels(uri, entity_type)
   query = nil
   labels = []
   if(entity_type == "author")
-    query = generate_agent_query(uri)
+    query = generate_variant_query(uri)
     auth = "loc_names"
+  end
+  
+  if(entity_type == "subject")
+    query = generate_variant_query(uri)
+    auth = "fast"
   end
   
   if !query.nil?
@@ -107,7 +128,7 @@ end
 
 # SPARQL queries
 #Variant label query
-def generate_agent_query(uri)
+def generate_variant_query(uri)
   return "SELECT ?label WHERE {  <" + uri + "> <http://www.w3.org/2004/02/skos/core#altLabel> ?label .}"
 end
 
@@ -164,12 +185,11 @@ def lookup_lcnaf(label)
   	result = query_lcnaf_suggest(label)
   	uri = get_lcnaf_uri_from_suggest(result)
   end
-  puts result.to_s
   uri
 end
 
 def query_lcnaf_suggest(label)
-  lc_url = "http://id.loc.gov/authorities/names/suggest/?q=" + label + "&rdftype=PersonalName" + "&count=1";
+  lc_url = "http://id.loc.gov/authorities/names/suggest/?q=" + URI.encode(label) + "&rdftype=PersonalName" + "&count=1";
   url = URI.parse(lc_url)
   resp = Net::HTTP.get_response(url)
   data = resp.body
@@ -187,34 +207,63 @@ end
 # Subjects and Locations - query FAST
 def lookup_fast(label)
 	uri = nil
-	result = query_fast(label)
-	uri = get_uri_from_fast_result(result)
+	# OCLC's own suggest doesn't seem to prioritize exact match to string
+	# instead seems to be using usage
+	result = query_fast_suggest(label)  
+	uri = get_uri_from_fast_result(label, result)
+	
+	#result = query_fast_cache(label)
+	#uri = get_qa_result_uri(label, result)
 	
 end
 
-def query_fast(label)
+# For subject
+def query_fast_suggest(label)
  topicFacet = "suggest50";
- label = "biology"
- fast_url = "http://fast.oclc.org/searchfast/fastsuggest?query=" + label + "&fl=" + topicFacet + "&queryReturn=id,*&rows=10&wt=json";
+ #fast_url = "http://fast.oclc.org/searchfast/fastsuggest?query=" + label + "&fl=" + topicFacet + ",id&queryIndex=" + topicFacet + "&queryReturn=id,*&rows=10&wt=json&suggest=fastSuggest";
+ #Bad URI issue
+ fast_url = "http://fast.oclc.org/fastIndex/select?q=altphrase:" + URI.encode("\"" + label + "\"") + "&rows=1&start=0&version=2.2&indent=on&fl=id,fullphrase,type&sort=usage desc&wt=json"
  url = URI.parse(fast_url)
  resp = Net::HTTP.get_response(url) 
  data = resp.body
  result = JSON.parse(data) 
 end
 
-def get_uri_from_fast_result(result)
+## Querying cache and looking for exact label matches
+def query_fast_cache(label)
+ # Not sure why maxRecords = 1 is taking longer
+ qa_url = "https://lookup.ld4l.org/authorities/search/linked_data/oclcfast_ld4l_cache/concept?q=" + label + "&maxRecords=4"
+ url = URI.parse(qa_url)
+ resp = Net::HTTP.get_response(url) 
+ data = resp.body
+ result = JSON.parse(data) 
+end
+
+def get_qa_result_uri(label, result)
+  uri = nil
+  # Checking if label is exactly the same
+  if result.length > 0
+    result_label = result[0]["label"]
+    uri = (result_label === label)? result[0]["uri"]: nil
+  end
+  uri
+end
+
+def get_uri_from_fast_result(label, result)
   uri = nil
   if (result.key?("response") && result["response"].key?("docs") && result["response"]["docs"].length > 0)
-    puts result.to_s
-  	id = result["response"]["docs"][0]["id"]
-  	puts id
-  	#remove fst at beginning of id
-  	puts id[3..-1]
-  	uri = "http://id.worldcat.org/fast/" + id[3..-1]
+    result_label = result["response"]["docs"][0]["fullphrase"]
+    # Check if labels equivalent
+    if(result_label.downcase === label.downcase)
+	  	id = result["response"]["docs"][0]["id"]
+	  	#remove fst at beginning of id
+	  	#remove leading zeros
+	  	id = id[3..-1]
+	  	id.sub!(/^0+/, "")
+	  	uri = "http://id.worldcat.org/fast/" + id
+  	end
   end
-  puts result.to_s
   uri
-  #result.key?("response") 
 end
  
 # Write unmatched labels to a file for later processing
