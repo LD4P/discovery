@@ -52,7 +52,7 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
         solr_documents << generate_solr_document(solr_data)
         solr_counter = solr_counter + 1
     else
-      unmatched_labels << label
+      unmatched_labels << info
     end   
     
     # As we iterate through labels, every 2000 solr documents, we write directly to the index
@@ -66,6 +66,7 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
   		umatched_labels = []
     end
   } 
+  
  # IF there are any left over values in solr_documentsm write them out now
   if (solr_documents.length > 0)
     write_file(unmatched_labels, unmatched_filename) 
@@ -209,6 +210,8 @@ def lookup_fast(label)
 	uri = nil
 	# OCLC's own suggest doesn't seem to prioritize exact match to string
 	# instead seems to be using usage
+	# Need to transform subdivision > to -- for FAST
+	label = label.gsub(" > ", "--")
 	result = query_fast_suggest(label)  
 	uri = get_uri_from_fast_result(label, result)
 	
