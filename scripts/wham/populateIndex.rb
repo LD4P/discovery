@@ -66,7 +66,7 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
   		umatched_labels = []
     end
   } 
-  
+ 
  # IF there are any left over values in solr_documentsm write them out now
   if (solr_documents.length > 0)
     write_file(unmatched_labels, unmatched_filename) 
@@ -84,6 +84,8 @@ def retrieve_uri_for_label(label, entity_type)
   	when "author"
   		uri = lookup_author(label) 
   	when "subject"
+  		uri = lookup_fast(label)
+  	when "location"
   		uri = lookup_fast(label)
   	else
   end
@@ -184,25 +186,42 @@ def lookup_lcnaf(label)
   if uri.nil? && label.end_with?(".")
   	label = label.chop
   	result = query_lcnaf_suggest(label)
-  	uri = get_lcnaf_uri_from_suggest(result)
+  	if(!result.nil?)
+  	  uri = get_lcnaf_uri_from_suggest(result)
+  	end
   end
   uri
 end
 
 def query_lcnaf_suggest(label)
+  result = nil
   lc_url = "http://id.loc.gov/authorities/names/suggest/?q=" + URI.encode(label) + "&rdftype=PersonalName" + "&count=1";
-  url = URI.parse(lc_url)
-  resp = Net::HTTP.get_response(url)
-  data = resp.body
-  result = JSON.parse(data)
-  return result
+  begin
+    url = URI.parse(lc_url)
+    resp = Net::HTTP.get_response(url)
+    data = resp.body
+    result = JSON.parse(data)
+  rescue JSON::ParserError => e
+  	puts "Rescued: #{e.inspect}"
+  	puts result.to_s
+    puts label
+  	puts lc_url
+  	result = nil
+  rescue StandardError => e
+    puts "Rescued: #{e.inspect}"
+    puts result.to_s
+    puts label
+  	puts lc_url
+  	result = nil
+  end
+  result
 end
 
 def get_lcnaf_uri_from_suggest(result)
   # sample result ["einstein",["Einstein (Musician)"],["1 result"],["http://id.loc.gov/authorities/names/no2002102271"]]
   # Need to ensure query and label are equivalent
   # 0 = query, 1 = label, 2 = number of results, 3 = uri
-  result[1].length > 0 && result[3].length > 0 && result[0] === result[1][0] ? result[3][0] : nil
+  (!result.nil? && result[1].length > 0 && result[3].length > 0 && result[0] === result[1][0]) ? result[3][0] : nil
 end
 
 # Subjects and Locations - query FAST
