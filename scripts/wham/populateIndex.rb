@@ -66,7 +66,7 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
   		umatched_labels = []
     end
   } 
- 
+
  # IF there are any left over values in solr_documentsm write them out now
   if (solr_documents.length > 0)
     write_file(unmatched_labels, unmatched_filename) 
@@ -74,8 +74,7 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
     # Write documents to Solr
     update_suggest_index(solr_documents)
   end
- #This will be replaced once we handle real data, this is to keep track of solr documents being created
-    #write_file(solr_documents, "solrdocs.json") 
+
 end
 
 def retrieve_uri_for_label(label, entity_type)
@@ -87,6 +86,8 @@ def retrieve_uri_for_label(label, entity_type)
   		uri = lookup_fast(label)
   	when "location"
   		uri = lookup_fast(label)
+  	when "genre"
+  	    uri = lookup_genre(label)
   	else
   end
   return uri
@@ -100,9 +101,14 @@ def retrieve_variant_labels(uri, entity_type)
     auth = "loc_names"
   end
   
-  if(entity_type == "subject")
+  if(entity_type == "subject" || entity_type == "location")
     query = generate_variant_query(uri)
     auth = "fast"
+  end
+  
+  if(entity_type == "genre")
+    query = generate_variant_query(uri)
+    auth = "loc_genre"
   end
   
   if !query.nil?
@@ -145,7 +151,7 @@ end
 
 
 
-## Lookupg URIs for a given label may involve more than one method
+## Lookup URIs for a given label may involve more than one method
 def lookup_author(label)
 	uri = nil
 	uri = lookup_author_browse_index(label)
@@ -194,8 +200,36 @@ def lookup_lcnaf(label)
 end
 
 def query_lcnaf_suggest(label)
+  query_lc_suggest("names", label)
+end
+
+
+#LCGFT
+def lookup_genre(label)
+  uri = nil 
+  result = query_lcgft_suggest(label)
+  uri = get_lcnaf_uri_from_suggest(result)
+  # If input label doesn't provide result and it ends in period, try to strip period to see if match can be obtained
+  # This is because there are causes where the author index has a period but LCNAF doesn't
+  if uri.nil? && label.end_with?(".")
+  	label = label.chop
+  	result = query_lcgft_suggest(label)
+  	if(!result.nil?)
+  	  uri = get_lcnaf_uri_from_suggest(result)
+  	end
+  end
+  uri
+end
+
+def query_lcgft_suggest(label)
+  query_lc_suggest("genreForms", label)
+end
+
+
+def query_lc_suggest(authority, label)
+  rdftype = (authority === "genreForms")? "&rdftype=GenreForm": (authority === "names")? "&rdftype=PersonalName" : ""
   result = nil
-  lc_url = "http://id.loc.gov/authorities/names/suggest/?q=" + URI.encode(label) + "&rdftype=PersonalName" + "&count=1";
+  lc_url = "http://id.loc.gov/authorities/" + authority + "/suggest/?q=" + URI.encode(label) + rdftype + "&count=1";
   begin
     url = URI.parse(lc_url)
     resp = Net::HTTP.get_response(url)
@@ -223,6 +257,7 @@ def get_lcnaf_uri_from_suggest(result)
   # 0 = query, 1 = label, 2 = number of results, 3 = uri
   (!result.nil? && result[1].length > 0 && result[3].length > 0 && result[0] === result[1][0]) ? result[3][0] : nil
 end
+
 
 # Subjects and Locations - query FAST
 def lookup_fast(label)
