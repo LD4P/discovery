@@ -425,18 +425,15 @@ end
 def generate_wikidata_query(loc_uri)
   # Get local name from loc_uri
   local_name = loc_uri.split("/")[-1]
-  puts local_name
-  return "SELECT ?entity ?entityLabel WHERE {?entity wdt:P244 \""
-      + local_name
-      + "\" SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }}"
+  return "SELECT ?entity ?entityLabel WHERE {?entity wdt:P244 \"" + local_name + "\" . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }}"
 end
 
 def execute_wikidata_query()
-  wikidata_endpoint = "https://query.wikidata.org/sparql?";
-  uri = URI.parse(wikidata_endpoint)
-  request = Net::HTTP::Post.new(uri)
-  request.body = "query=" + query
+  wikidata = "https://query.wikidata.org/sparql?query=" + URI.encode(query);
+  uri = URI.parse(wikidata)
+  request = Net::HTTP::Get.new(uri)
   request["Accept"] = "application/sparql-results+json"
+  request["User-Agent"] = "My Ruby Script"
   req_options = {
 	use_ssl: uri.scheme == "https",
   }	
