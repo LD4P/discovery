@@ -49,6 +49,11 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
         if(labels.length > 0)
           solr_data["variants"] = labels
         end
+        #Also get pseudonyms
+        pseudonyms = retrieve_pseudonyms(uri, entity_type)
+        if(pseudonyms.length > 0)
+          solr_data["pseudonym_data"] = pseudonyms      	
+        end
         solr_documents << generate_solr_document(solr_data)
         solr_counter = solr_counter + 1
     else
@@ -66,7 +71,7 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
   		umatched_labels = []
     end
   } 
-
+ #puts solr_documents.to_s
  # IF there are any left over values in solr_documentsm write them out now
   if (solr_documents.length > 0)
     write_file(unmatched_labels, unmatched_filename) 
@@ -369,6 +374,13 @@ def generate_solr_document(solr_data)
   if(solr_document.key?("label_s"))
     solr_document["label_t"] = [] << solr_document["label_s"]
   end
+  
+  #Additional processing for pseudonym data
+  if(solr_data.key?("pseudonym_data"))
+    pseudonyms = solr_data["pseudonym_data"]
+  	solr_document["pseudonyms_ss"] = pseudonyms.map { |p| p.to_json }
+    solr_document["pseudonyms_t"] = pseudonyms.map { |p| p["label"] }
+  end
   solr_document
 end
 
@@ -376,6 +388,66 @@ def update_suggest_index(solr_documents)
    solr_url = ENV["SUGGEST_SOLR"]
    solr = RSolr.connect :url => solr_url
    solr.add solr_documents, :add_attributes => {:commitWithin => 10}
+end
+
+## Pseudonym retrieval
+
+# Pseudonym retrieval  
+def retrieve_pseudonyms(uri, entity_type)
+  query = nil
+  pseudonyms = []
+  if(entity_type == "author")
+    query = generate_pseudonym_query(uri)
+    if !query.nil?
+      auth = "loc_names"
+      results = execute_query(auth, query)
+      pseudonyms = results.map { |r| {"label" => r["label"]["value"], "uri" => r["uri"]["value"]} }
+    end
+  end
+  return pseudonyms
+end
+
+# Uses LOC URI to get see also URIs and labels where they exist
+def generate_pseudonym_query(uri)
+  return "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " + 
+  "SELECT ?uri ?label WHERE {" + 
+  "<" + uri + "> <http://www.w3.org/2000/01/rdf-schema#seeAlso> ?uri ." + 
+  "?uri <http://www.w3.org/2004/02/skos/core#prefLabel> ?label . " + 
+  "FILTER NOT EXISTS {?uri <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.loc.gov/mads/rdf/v1#DeprecatedAuthority> .}" +
+  "}"
+end
+
+
+
+## Wikidata 
+
+# Query to retrieve Wikidata URI for LOC URI
+def generate_wikidata_query(loc_uri)
+  # Get local name from loc_uri
+  local_name = loc_uri.split("/")[-1]
+  puts local_name
+  return "SELECT ?entity ?entityLabel WHERE {?entity wdt:P244 \""
+      + local_name
+      + "\" SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }}"
+end
+
+def execute_wikidata_query()
+  wikidata_endpoint = "https://query.wikidata.org/sparql?";
+  uri = URI.parse(wikidata_endpoint)
+  request = Net::HTTP::Post.new(uri)
+  request.body = "query=" + query
+  request["Accept"] = "application/sparql-results+json"
+  req_options = {
+	use_ssl: uri.scheme == "https",
+  }	
+  response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+    http.request(request)
+  end
+ 
+  data_hash = JSON.parse(response.body)
+  puts data_hash.to_s
+  results = data_hash["results"]["bindings"]
+  return results
 end
 
 ### Running the file with these arguments will kick off the processing method 
