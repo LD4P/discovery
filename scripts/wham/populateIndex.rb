@@ -54,6 +54,8 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
         if(pseudonyms.length > 0)
           solr_data["pseudonym_data"] = pseudonyms      	
         end
+        # Retrieve wikidata pseudonyms
+        wikidata_info = retrieve_wikidata_info(uri, entity_type)
         solr_documents << generate_solr_document(solr_data)
         solr_counter = solr_counter + 1
     else
@@ -70,7 +72,7 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
   		solr_documents = []
   		umatched_labels = []
     end
-  } 
+  }  
  #puts solr_documents.to_s
  # IF there are any left over values in solr_documentsm write them out now
   if (solr_documents.length > 0)
@@ -79,6 +81,10 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
     # Write documents to Solr
     update_suggest_index(solr_documents)
   end
+  puts "last iteration, added this many solr documents"
+  puts solr_documents.length.to_s
+  puts "last iteration, added this many to unmatched list"
+  puts unmatched_labels.length.to_s
 
 end
 
@@ -285,6 +291,7 @@ def query_fast_suggest(label)
  #fast_url = "http://fast.oclc.org/searchfast/fastsuggest?query=" + label + "&fl=" + topicFacet + ",id&queryIndex=" + topicFacet + "&queryReturn=id,*&rows=10&wt=json&suggest=fastSuggest";
  #Bad URI issue
  fast_url = "http://fast.oclc.org/fastIndex/select?q=altphrase:" + URI.encode("\"" + label + "\"") + "&rows=1&start=0&version=2.2&indent=on&fl=id,fullphrase,type&sort=usage desc&wt=json"
+ puts fast_url.to_s
  url = URI.parse(fast_url)
  resp = Net::HTTP.get_response(url) 
  data = resp.body
@@ -316,7 +323,7 @@ def get_uri_from_fast_result(label, result)
   if (result.key?("response") && result["response"].key?("docs") && result["response"]["docs"].length > 0)
     result_label = result["response"]["docs"][0]["fullphrase"]
     # Check if labels equivalent
-    if(result_label.downcase === label.downcase)
+    if(URI.encode(result_label.unicode_normalize.downcase) === URI.encode(label.unicode_normalize.downcase))
 	  	id = result["response"]["docs"][0]["id"]
 	  	#remove fst at beginning of id
 	  	#remove leading zeros
@@ -422,14 +429,28 @@ end
 ## Wikidata 
 
 # Query to retrieve Wikidata URI for LOC URI
+def retrieve_wikidata_info(loc_uri, entity_type)
+  results = nil
+  # Query will return wikidata URI where it exists as well as possible pseudonyms
+  if(entity_type == "author")
+    query = generate_wikidata_query(loc_uri)
+    results = execute_wikidata_query(query)
+    if(!results.nil? && results.length > 0)
+      puts results.to_s
+  	  #wikidata_uri = results[0][
+    end
+  end
+  results
+end
+
 def generate_wikidata_query(loc_uri)
   # Get local name from loc_uri
   local_name = loc_uri.split("/")[-1]
-  return "SELECT ?entity ?entityLabel WHERE {?entity wdt:P244 \"" + local_name + "\" . SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }}"
+  return "SELECT ?entity ?entityLabel ?description (GROUP_CONCAT(?pseudonym;SEPARATOR=\"|\") AS ?pseudonyms) WHERE {?entity wdt:P244 \"" + local_name + "\" . OPTIONAL {?entity wdt:P742 ?pseudonym .} OPTIONAL {?entity schema:description ?description. FILTER(lang(?description) = 'en')} SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }} GROUP BY  ?entity ?entityLabel ?description"
 end
 
-def execute_wikidata_query()
-  wikidata = "https://query.wikidata.org/sparql?query=" + URI.encode(query);
+def execute_wikidata_query(query)
+  wikidata = "https://query.wikidata.org/sparql?query=" + URI.encode(query)
   uri = URI.parse(wikidata)
   request = Net::HTTP::Get.new(uri)
   request["Accept"] = "application/sparql-results+json"
