@@ -56,6 +56,7 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
         end
         # Retrieve wikidata pseudonyms
         wikidata_info = retrieve_wikidata_info(uri, entity_type)
+        solr_data = solr_data.merge(wikidata_info)
         solr_documents << generate_solr_document(solr_data)
         solr_counter = solr_counter + 1
     else
@@ -370,7 +371,7 @@ def generate_solr_document(solr_data)
   id = solr_data["uri"].gsub("/","_") 
   solr_document["id"] = id
   # Base mapping from json field to solr doc field
-  mapping = {"type" => "type_s","label" => "label_s","uri" => "uri_s","variants" => "variants_t", "rank" => "rank_i"}
+  mapping = {"type" => "type_s","label" => "label_s","uri" => "uri_s","variants" => "variants_t", "rank" => "rank_i", "wd_uri" => "wd_uri_s", "wd_description" => "wd_description_s", "wd_pseudonyms" => "wd_pseudonyms_t"}
   mapping.keys.each do |key| 
     # If the key is present in the input data, map appropriately
     if solr_data.key?(key)
@@ -428,19 +429,32 @@ end
 
 ## Wikidata 
 
-# Query to retrieve Wikidata URI for LOC URI
+#Although we have wikidata URIs for a lot of cases, no need to look at the index first because we want additional info here
+# that we don't have
 def retrieve_wikidata_info(loc_uri, entity_type)
-  results = nil
+  wd_info = nil 
   # Query will return wikidata URI where it exists as well as possible pseudonyms
   if(entity_type == "author")
     query = generate_wikidata_query(loc_uri)
     results = execute_wikidata_query(query)
-    if(!results.nil? && results.length > 0)
-      puts results.to_s
-  	  #wikidata_uri = results[0][
+    if(!results.nil? && results.key?("results") && results["results"].key?("bindings") && results["results"]["bindings"].length > 0)
+      binding = results["results"]["bindings"][0]
+      if binding.key?("entity") && binding["entity"].key?("value")
+      	uri = binding["entity"]["value"]
+      	wd_info = {"wd_uri" =>  uri}
+      	if binding.key?("description") && binding["description"].key?("value")
+      		description = binding["description"]["value"]
+      		wd_info["wd_description"] = description
+      	end 
+      	if binding.key?("pseudonyms") && binding["pseudonyms"].key?("value")
+      		pseudonyms = binding["pseudonyms"]["value"]
+      		ps_array = pseudonyms.split("|")
+      		wd_info["wd_pseudonyms"] = ps_array
+      	end
+      end 
     end
   end
-  results
+  wd_info
 end
 
 def generate_wikidata_query(loc_uri)
@@ -449,8 +463,8 @@ def generate_wikidata_query(loc_uri)
   return "SELECT ?entity ?entityLabel ?description (GROUP_CONCAT(?pseudonym;SEPARATOR=\"|\") AS ?pseudonyms) WHERE {?entity wdt:P244 \"" + local_name + "\" . OPTIONAL {?entity wdt:P742 ?pseudonym .} OPTIONAL {?entity schema:description ?description. FILTER(lang(?description) = 'en')} SERVICE wikibase:label { bd:serviceParam wikibase:language \"[AUTO_LANGUAGE],en\". }} GROUP BY  ?entity ?entityLabel ?description"
 end
 
-def execute_wikidata_query(query)
-  wikidata = "https://query.wikidata.org/sparql?query=" + URI.encode(query)
+def execute_wikidata_query(query) 
+  wikidata = "https://query.wikidata.org/sparql?query=" + URI.encode(query);
   uri = URI.parse(wikidata)
   request = Net::HTTP::Get.new(uri)
   request["Accept"] = "application/sparql-results+json"
@@ -461,11 +475,7 @@ def execute_wikidata_query(query)
   response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
     http.request(request)
   end
- 
-  data_hash = JSON.parse(response.body)
-  puts data_hash.to_s
-  results = data_hash["results"]["bindings"]
-  return results
+  JSON.parse(response.body)
 end
 
 ### Running the file with these arguments will kick off the processing method 
