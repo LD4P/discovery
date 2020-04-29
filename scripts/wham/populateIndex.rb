@@ -55,7 +55,7 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
           solr_data["pseudonym_data"] = pseudonyms      	
         end
         # Retrieve wikidata pseudonyms
-        wikidata_info = retrieve_wikidata_info(uri, entity_type)
+        wikidata_info = retrieve_wikidata_info(uri, entity_type)      
         solr_data = solr_data.merge(wikidata_info)
         solr_documents << generate_solr_document(solr_data)
         solr_counter = solr_counter + 1
@@ -432,7 +432,7 @@ end
 #Although we have wikidata URIs for a lot of cases, no need to look at the index first because we want additional info here
 # that we don't have
 def retrieve_wikidata_info(loc_uri, entity_type)
-  wd_info = nil 
+  wd_info = {} 
   # Query will return wikidata URI where it exists as well as possible pseudonyms
   if(entity_type == "author")
     query = generate_wikidata_query(loc_uri)
