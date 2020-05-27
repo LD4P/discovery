@@ -493,38 +493,92 @@ def test_see_also()
   see_alsos = obj["pseudonyms_ss"]
   see_text = obj["pseudonyms_t"]
   
-  get_see_also_info(obj, see_alsos)
+  get_see_also_info(obj)
   
   
 end
 
-# Argument = solr document, see also = array of stringified JSON objects
-def get_see_also_info(solr_doc, see_also_values)
+# Argument = solr document, 
+def get_see_also_info(solr_doc)
   uri = solr_doc["uri_s"]
-  puts "URI of requesting doc"
-  puts uri
-  puts solr_doc["label_s"]
+  label = solr_doc["label_s"]
+  puts "Get See Also Info for Solr document #{uri} and #{label}"
+  #see also = array of stringified JSON objects
+  see_also_values = solr_doc["pseudonyms_ss"]
   see_also_values.each{|see_also|
     see_json = JSON.parse(see_also)
     see_uri = see_json["uri"]
-    puts "see also URI"
-    puts see_uri
-    puts see_json["label"]
+    see_label = see_json["label"]
+    puts ""
+    puts "see also URI #{see_uri} and label #{see_label}"
     # Test to see if this URI already exists within Solr
     uri_docs = query_uri_exists(see_uri)
     if(uri_docs.length > 0)
-      puts "see also uri has solr doc"
+      puts "#{see_uri} has corresponding Solr doc"
+      # Solr doc exists for see also URI, so update THIS solr document accordingly
+      solr_doc = update_with_see_also(solr_doc, see_json, true)
+     
       #If it exists, then get the document to check if it contains any 
       # references back to this URI in its see also
       # since that too should now be fixed
-      has_ref = has_doc_reference(uri_docs, uri)
-      puts "does see also doc also point back to requesting URI"
+      # With a URI, expect only a single document
+      has_ref = has_doc_reference(uri_docs[0], uri)
+      puts "Refer back to #{uri} ?"
       puts has_ref.to_s   
+      if(has_ref == true)
+        seen_doc = uri_docs[0]
+        seen_json = seen_doc["pseudonyms_ss"]
+        puts "Seen json"
+        puts seen_json.to_s
+        seen_json.each{|seen|
+          seen_solr_doc = update_with_see_also(seen_doc, JSON.parse(seen), true)
+      	  puts "updating solr dec for seen also"
+      	  puts seen_solr_doc.to_s
+        }
+      	
+      end
     else
-    	puts "see_uri does not have solr doc"    
+    
+    	puts "#{see_uri} does not have solr doc"    
+    	solr_doc = update_with_see_also(solr_doc, see_json, false)
     end
+    puts "solr doc after update is now"
+    puts solr_doc.to_s
   }
 end
+
+# update solr document in the case where a solr doc exists for see_also URI
+def update_with_see_also(solr_doc, see_json, see_doc_exists)
+	if(see_doc_exists == true)
+		# Remove text from pseudonym_t
+		see_label = see_json["label"]
+		# This should return an array of text values
+		puts "update with see also solr doc input"
+		puts solr_doc.keys.to_s
+		if(solr_doc.key?("pseudonyms_t"))
+		  pseudonym_text = solr_doc["pseudonyms_t"]
+		  pseudonym_text.delete_if {|t| t == see_label}
+		  solr_doc["pseudonyms_t"] = pseudonym_text
+		end  
+	else
+		# Remove see also URIs from display field
+		see_uri = see_json["uri"]
+		if(solr_doc.key?("pseudonyms_ss"))
+		  pseudonym_ss = solr_doc["pseudonyms_ss"]
+		  pseudonym_ss.delete_if {|ss|
+		    ss_json = JSON.parse(ss)
+		    if (ss_json["uri"] == see_uri)
+		  	  true
+		    else
+		      false
+		    end
+		  }
+		  solr_doc["pseudonyms_ss"] = pseudonym_ss
+		end
+	end
+	return solr_doc
+end
+
 
 # Given an LOC URI, does this URI exist already in the index
 # IF uri exists, returns response
@@ -536,12 +590,22 @@ def query_uri_exists(uri)
    
 end
 
-#If document exists
-def has_doc_reference(docs, uri)
+#If set of documents has a see also reference to a URI
+def has_docs_reference(docs, uri)
   len = docs.length
   docs.each{|doc| 
-    puts "has doc reference - id of doc"
-    puts doc["id"] 
+    has_ref = has_doc_reference(doc, uri)
+    if has_ref == true 
+    	return true
+    end
+  }
+  
+  return false
+end
+
+def has_doc_reference(doc, uri)
+    puts "Checking for reference in this doc"
+    puts doc["uri_s"] 
   	if doc.key?("pseudonyms_ss")
   		ss = doc["pseudonyms_ss"]
         ss.each{|ss_i|
@@ -553,8 +617,7 @@ def has_doc_reference(docs, uri)
           end
         }
   	end
-  	return false
-  }
+  	return false 
 end
 
 def does_doc_exist(docs)
