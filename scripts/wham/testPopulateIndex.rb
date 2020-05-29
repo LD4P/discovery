@@ -16,24 +16,15 @@ def load_json_label_values(entity_type, filename, unmatched_filename)
   update_info_for_labels(data, entity_type, unmatched_filename)
 end
 
-# Load file (this expects the raw results from Solr with the facet values and counts)
-def load_label_values(filename)	
-  # This process will have to change with a large file
-  file = File.read(filename)
-	data_hash = JSON.parse(file)
-  authors = data_hash["facet_counts"]["facet_fields"]["author_facet"]
-  labels = authors.select.with_index { |_, i| i.even? }
-  counts = authors.select.with_index { |_, i| i.odd? }
-  # Need to transform this into array of objects with "label" and "rank"
-  #update_info_for_labels(labels, "author")
-end
 
 # Update info by looking up URI and getting additional info like variant labels
 # label_data = array of objects with "label" as key and "rank" as key
 # Packaging as 2000 documents as a time
 def update_info_for_labels(label_data, entity_type, unmatched_filename)
   unmatched_labels = []
-  solr_documents = []
+  # For documents currently in the solr_documents array, i.e. yet to be processed
+  # save URI to index in the array in case we need to look any up during processing
+  solr_documents_hash = {}
   counter = 0
   solr_counter = 0
   label_data.each { |info| 
@@ -57,8 +48,20 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
         # Retrieve wikidata pseudonyms
         wikidata_info = retrieve_wikidata_info(uri, entity_type)      
         solr_data = solr_data.merge(wikidata_info)
-        solr_documents << generate_solr_document(solr_data)
+        generated_doc = generate_solr_document(solr_data)
+        
+        # Questioning whether this adequately covers the situation where
+        # the document hasn't been added yet so see also may be removed from display
+        # but then would need to be READDED if encountered
+        
+        # Additional step for processing see also references in/between elements
+        # puts "processing generated solr doc for any see also cross references"
+   		# process_results = process_see_also_for_doc(generated_doc, solr_documents_hash)     
+   		# solr_documents_hash = process_results["solr_documents_hash"]
+   		# generated_doc = process_results["solr_doc"]
+        solr_documents_hash[uri] = generated_doc
         solr_counter = solr_counter + 1
+   		
     else
       unmatched_labels << info
     end   
@@ -66,25 +69,26 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
     # As we iterate through labels, every 2000 solr documents, we write directly to the index
     if solr_counter == 2000
         puts counter
-    	#write_file(unmatched_labels, unmatched_filename)
-  		#update_suggest_index(solr_documents)
+    	write_file(unmatched_labels, unmatched_filename)
+  		update_suggest_index(solr_documents_hash.values)
   		# reset counter and arrays
   		solr_counter = 0
-  		solr_documents = []
+  		solr_documents_hash = {}
   		umatched_labels = []
     end
   }  
  #puts solr_documents.to_s
  # IF there are any left over values in solr_documentsm write them out now
-  if (solr_documents.length > 0)
-    #write_file(unmatched_labels, unmatched_filename) 
+  if (solr_documents_hash.values.length > 0)
+    write_file(unmatched_labels, unmatched_filename) 
    
     # Write documents to Solr
-    #update_suggest_index(solr_documents)
+    update_suggest_index(solr_documents_hash.values)
   end
   puts "last iteration, added this many solr documents"
-  puts solr_documents.length.to_s
-  puts JSON.pretty_generate(solr_documents)
+  puts solr_documents_hash.values.length.to_s
+ 
+  puts JSON.pretty_generate(solr_documents_hash.values)
   puts "last iteration, added this many to unmatched list"
   puts unmatched_labels.length.to_s
 
@@ -355,6 +359,11 @@ def process_file(action_type, entity_type, filename, unmatched_filename)
     load_json_label_values(entity_type, filename, unmatched_filename)
   end
   
+  # If updating see also info, need only 
+  if(action_type == "update")
+  	update_see_also()
+  end
+  
   if(action_type == "unmatched")
     #query_unmatched(unmatched_filename)
   end
@@ -485,21 +494,33 @@ end
 # Pass in array of stringifed JSON that needs to be parsed
 
 
-def test_see_also()
+# query index to retrieve all documents that have any see also references
+
+def retrieve_docs_with_see_also()
+   solr_url = ENV["SUGGEST_SOLR"]
+   solr = RSolr.connect :url => solr_url
+   response = solr.get 'select', :params => {:q => 'pseudonyms_ss:*'}
+   return response["response"]["docs"]
+end
+
+def update_see_also()
   # Read in mark twain original solr doc
-  json = File.read("testsolr_doc.json")
-  obj = JSON.parse(json)
+  #json = File.read("testsolr_doc.json")
+  #obj = JSON.parse(json)
   
-  see_alsos = obj["pseudonyms_ss"]
-  see_text = obj["pseudonyms_t"]
-  
-  get_see_also_info(obj)
+  see_also_docs = retrieve_docs_with_see_also()
+  see_also_docs.each{|doc|
+    results = get_see_also_info(doc, {})
+    puts results.to_s
+  }
   
   
 end
 
-# Argument = solr document, 
-def get_see_also_info(solr_doc)
+# Argument = solr document being processed
+# if called from within process of generating documents, also
+# has hash used to save documents so far
+def get_see_also_info(solr_doc, solr_documents_hash)
   uri = solr_doc["uri_s"]
   label = solr_doc["label_s"]
   puts "Get See Also Info for Solr document #{uri} and #{label}"
@@ -513,7 +534,9 @@ def get_see_also_info(solr_doc)
     puts "see also URI #{see_uri} and label #{see_label}"
     # Test to see if this URI already exists within Solr
     uri_docs = query_uri_exists(see_uri)
-    if(uri_docs.length > 0)
+    
+    # If URI exists within the Solr index
+    if(solr_documents_hash.key?(see_uri) || uri_docs.length > 0)
       puts "#{see_uri} has corresponding Solr doc"
       # Solr doc exists for see also URI, so update THIS solr document accordingly
       solr_doc = update_with_see_also(solr_doc, see_json, true)
@@ -521,29 +544,34 @@ def get_see_also_info(solr_doc)
       #If it exists, then get the document to check if it contains any 
       # references back to this URI in its see also
       # since that too should now be fixed
+      # E.g. If first Solr doc is Mark Twain and that has see also Samuel Clemens
+      # Also update Clemens if it has reference back to Mark Twain
+      # removing twain from it's matchable text (but only Twain)
       # With a URI, expect only a single document
-      has_ref = has_doc_reference(uri_docs[0], uri)
+      see_also_doc = solr_documents_hash.key?(see_uri) ? solr_documents_hash[see_uri] : uri_docs[0]
+      has_ref = has_doc_reference(see_also_doc, uri)
       puts "Refer back to #{uri} ?"
       puts has_ref.to_s   
       if(has_ref == true)
-        seen_doc = uri_docs[0]
-        seen_json = seen_doc["pseudonyms_ss"]
+        see_also_json = see_also_doc["pseudonyms_ss"]
         puts "Seen json"
-        puts seen_json.to_s
-        seen_json.each{|seen|
-          seen_solr_doc = update_with_see_also(seen_doc, JSON.parse(seen), true)
-      	  puts "updating solr dec for seen also"
-      	  puts seen_solr_doc.to_s
-        }
-      	
+        puts see_also_json.to_s
+        see_also_json.each{|seen|
+          seen_obj = JSON.parse(seen)
+          if(seen_obj["uri"] == uri)
+            seen_solr_doc = update_with_see_also(see_also_doc, JSON.parse(seen), true)
+      	    puts "updated seen document to remove ref/matchable text to original document"
+      	    puts seen_solr_doc.to_s
+      	  end
+        }     	
       end
     else
-    
-    	puts "#{see_uri} does not have solr doc"    
-    	solr_doc = update_with_see_also(solr_doc, see_json, false)
+      puts "#{see_uri} does not have solr doc"    
+      solr_doc = update_with_see_also(solr_doc, see_json, false)
     end
     puts "solr doc after update is now"
     puts solr_doc.to_s
+    return {"solr_doc": solr_doc, "solr_documents_hash": solr_documents_hash}
   }
 end
 
@@ -624,15 +652,17 @@ def does_doc_exist(docs)
 	return docs.length > 0
 end
 
+# Arguments: solr doc in the process of being generated, URI to doc hash, and solr documents array
+# for this batch
+def process_see_also_for_doc(generated_doc, solr_documents_hash)
+  get_see_also_info(generated_doc, solr_documents_hash)
+end
+
 ### Running the file with these arguments will kick off the processing method 
 
-#action_type = ARGV[0]
-#entity_type = ARGV[1]
-#filename = ARGV[2]
-#unmatched_filename = ARGV[3]
+action_type = ARGV[0] 
+entity_type = ARGV[1] || ""
+filename = ARGV[2] || ""
+unmatched_filename = ARGV[3] || ""
 
-docs = query_uri_exists("http://id.loc.gov/authorities/names/n79021164")
-exists = does_doc_exist(docs)
-puts exists.to_s
-test_see_also()
-#process_file(action_type, entity_type, filename, unmatched_filename)
+process_file(action_type, entity_type, filename, unmatched_filename)
