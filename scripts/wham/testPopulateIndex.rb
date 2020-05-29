@@ -52,7 +52,7 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
         
         # Questioning whether this adequately covers the situation where
         # the document hasn't been added yet so see also may be removed from display
-        # but then would need to be READDED if encountered
+        # but then would need to be RE-ADDED if encountered
         
         # Additional step for processing see also references in/between elements
         # puts "processing generated solr doc for any see also cross references"
@@ -183,6 +183,7 @@ end
 
 # Lookup author browse index
 def lookup_author_browse_index(label)
+  puts "lookup author browse index #{label}"
   solr_url = ENV["AUTHOR_BROWSE_INDEX"] + "/select?q=authlabel_s:\"" + URI.encode(label) + "\"&wt=json";  
   url = URI.parse(solr_url)
   resp = Net::HTTP.get_response(url)
@@ -398,6 +399,8 @@ def generate_solr_document(solr_data)
     pseudonyms = solr_data["pseudonym_data"]
   	solr_document["pseudonyms_ss"] = pseudonyms.map { |p| p.to_json }
     solr_document["pseudonyms_t"] = pseudonyms.map { |p| p["label"] }
+    #also preserving copy of original see also info from loc
+    solr_document["loc_pseudonyms_ss"] = solr_document["pseudonyms_ss"]
   end
   solr_document
 end
@@ -508,71 +511,50 @@ def update_see_also()
   #json = File.read("testsolr_doc.json")
   #obj = JSON.parse(json)
   
+  update_docs = []
   see_also_docs = retrieve_docs_with_see_also()
   see_also_docs.each{|doc|
-    results = get_see_also_info(doc, {})
-    puts results.to_s
+    updates = get_see_also_info(doc)
+    updates.each{|update|
+      # consider using map
+      update_docs << {"id":update["id"], "pseudonyms_ss":{"set": update["pseudonyms_ss"]}, "pseudonyms_t":{"set":update["pseudonyms_t"]} }
+    }
   }
-  
-  
+   
+  puts "final update results"
+  puts JSON.pretty_generate(update_docs)
+  update_suggest_index(update_docs)
+  # Update Solr
 end
 
 # Argument = solr document being processed
 # if called from within process of generating documents, also
 # has hash used to save documents so far
-def get_see_also_info(solr_doc, solr_documents_hash)
+def get_see_also_info(solr_doc)
+  update_docs = []
   uri = solr_doc["uri_s"]
   label = solr_doc["label_s"]
   puts "Get See Also Info for Solr document #{uri} and #{label}"
   #see also = array of stringified JSON objects
-  see_also_values = solr_doc["pseudonyms_ss"]
+  # Using dup b/c we update the solr document itself and it seems
+  # like the reference to the field in the document changes if the doc is changed
+  see_also_values = solr_doc["pseudonyms_ss"].dup
+  puts "see also values for #{label} are"
+  puts JSON.pretty_generate(see_also_values)
+ 
   see_also_values.each{|see_also|
     see_json = JSON.parse(see_also)
     see_uri = see_json["uri"]
     see_label = see_json["label"]
-    puts ""
-    puts "see also URI #{see_uri} and label #{see_label}"
     # Test to see if this URI already exists within Solr
     uri_docs = query_uri_exists(see_uri)
     
-    # If URI exists within the Solr index
-    if(solr_documents_hash.key?(see_uri) || uri_docs.length > 0)
-      puts "#{see_uri} has corresponding Solr doc"
-      # Solr doc exists for see also URI, so update THIS solr document accordingly
-      solr_doc = update_with_see_also(solr_doc, see_json, true)
-     
-      #If it exists, then get the document to check if it contains any 
-      # references back to this URI in its see also
-      # since that too should now be fixed
-      # E.g. If first Solr doc is Mark Twain and that has see also Samuel Clemens
-      # Also update Clemens if it has reference back to Mark Twain
-      # removing twain from it's matchable text (but only Twain)
-      # With a URI, expect only a single document
-      see_also_doc = solr_documents_hash.key?(see_uri) ? solr_documents_hash[see_uri] : uri_docs[0]
-      has_ref = has_doc_reference(see_also_doc, uri)
-      puts "Refer back to #{uri} ?"
-      puts has_ref.to_s   
-      if(has_ref == true)
-        see_also_json = see_also_doc["pseudonyms_ss"]
-        puts "Seen json"
-        puts see_also_json.to_s
-        see_also_json.each{|seen|
-          seen_obj = JSON.parse(seen)
-          if(seen_obj["uri"] == uri)
-            seen_solr_doc = update_with_see_also(see_also_doc, JSON.parse(seen), true)
-      	    puts "updated seen document to remove ref/matchable text to original document"
-      	    puts seen_solr_doc.to_s
-      	  end
-        }     	
-      end
-    else
-      puts "#{see_uri} does not have solr doc"    
-      solr_doc = update_with_see_also(solr_doc, see_json, false)
-    end
-    puts "solr doc after update is now"
-    puts solr_doc.to_s
-    return {"solr_doc": solr_doc, "solr_documents_hash": solr_documents_hash}
+    see_also_exists = (uri_docs.length > 0) ? true: false
+    puts "#{see_uri} has corresponding solr doc? #{see_also_exists.to_s}"
+    solr_doc = update_with_see_also(solr_doc, see_json, see_also_exists)
   }
+  update_docs << solr_doc
+  return update_docs
 end
 
 # update solr document in the case where a solr doc exists for see_also URI
