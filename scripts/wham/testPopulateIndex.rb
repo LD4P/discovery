@@ -5,7 +5,7 @@ require 'json'
 require 'rsolr'
 require 'dotenv/load'
 
-
+require 'active_support/core_ext/hash'
 
 #Load from JSON structured like {type:author, label: , rank: ..}
 #Data files will be divided by type, so type can be an argument
@@ -53,7 +53,7 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
         # Questioning whether this adequately covers the situation where
         # the document hasn't been added yet so see also may be removed from display
         # but then would need to be RE-ADDED if encountered
-        
+          
         # Additional step for processing see also references in/between elements
         # puts "processing generated solr doc for any see also cross references"
    		# process_results = process_see_also_for_doc(generated_doc, solr_documents_hash)     
@@ -342,33 +342,7 @@ def get_uri_from_fast_result(label, result)
   uri
 end
  
-# Write unmatched labels to a file for later processing
-def write_file(json_data, filename)
-  File.open(filename,"w") do |f|
-    f.write(JSON.pretty_generate(json_data))
-  end
-end
-#test_uri = "http://id.loc.gov/authorities/names/n79021164"
-#test_label_data = ["Twain, Mark, 1835-1910"]
-#retrieve_variant_labels(test_uri, "author") 
-#lookup_author_browse_index(test_label)
-#update_info_for_labels(test_label_data, "author")
 
-# Method to start process of getting labels
-def process_file(action_type, entity_type, filename, unmatched_filename)
-  if(action_type == "load")
-    load_json_label_values(entity_type, filename, unmatched_filename)
-  end
-  
-  # If updating see also info, need only 
-  if(action_type == "update")
-  	update_see_also()
-  end
-  
-  if(action_type == "unmatched")
-    #query_unmatched(unmatched_filename)
-  end
-end
 
 
 ## Solr document generation
@@ -633,11 +607,78 @@ end
 def does_doc_exist(docs)
 	return docs.length > 0
 end
+ 
+## Add pseudonyms for solr documents that already exist
+def add_pseudonym_info()
+  # Updates: to be written at 100 Solr documents at a time
+  # The first query should result in a list of all the URIs with type author contained within the index
+  all_docs = retrieve_URIs_in_index("author")
+  puts all_docs.to_s
+  all_docs.each{|doc|
+    id = doc["id"]
+    uri = doc["uri_s"] 
+    solr_data = {"id":id, "uri":uri}.with_indifferent_access
+    #Also get pseudonyms
+    pseudonyms = retrieve_pseudonyms(uri, "author")
+    if(pseudonyms.length > 0)
+      solr_data["pseudonym_data"] = pseudonyms      	
+    end
+    # Retrieve wikidata pseudonyms
+    wikidata_info = retrieve_wikidata_info(uri, "author")      
+    solr_data = solr_data.merge(wikidata_info)
+    generated_doc = generate_solr_document(solr_data)
+    puts "resulting solr document"
+    puts JSON.pretty_generate(generated_doc)
+    
+  }
+  
+end
+
+def retrieve_URIs_in_index(entity_type)
+  solr_url = ENV["SUGGEST_SOLR"]
+  solr = RSolr.connect :url => solr_url
+  response = solr.get 'select', :params => {:q => 'type_s:' + entity_type, :rows => 400000, :fl => 'id,uri_s'}
+  return response["response"]["docs"]
+end
 
 # Arguments: solr doc in the process of being generated, URI to doc hash, and solr documents array
 # for this batch
 def process_see_also_for_doc(generated_doc, solr_documents_hash)
   get_see_also_info(generated_doc, solr_documents_hash)
+end
+
+
+## Argument processing, file reading and writing methods
+# Write unmatched labels to a file for later processing
+def write_file(json_data, filename)
+  File.open(filename,"w") do |f|
+    f.write(JSON.pretty_generate(json_data))
+  end
+end
+#test_uri = "http://id.loc.gov/authorities/names/n79021164"
+#test_label_data = ["Twain, Mark, 1835-1910"]
+#retrieve_variant_labels(test_uri, "author") 
+#lookup_author_browse_index(test_label)
+#update_info_for_labels(test_label_data, "author")
+
+# Method to start process of getting labels
+def process_file(action_type, entity_type, filename, unmatched_filename)
+  if(action_type == "load")
+    load_json_label_values(entity_type, filename, unmatched_filename)
+  end
+  
+  # If updating see also info, need only 
+  if(action_type == "update")
+  	update_see_also()
+  end
+  
+  if(action_type == "unmatched")
+    #query_unmatched(unmatched_filename)
+  end
+  
+  if(action_type == "pseudonym")
+  	add_pseudonym_info()
+  end
 end
 
 ### Running the file with these arguments will kick off the processing method 
