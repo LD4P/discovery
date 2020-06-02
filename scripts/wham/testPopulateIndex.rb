@@ -79,17 +79,18 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
   }  
  #puts solr_documents.to_s
  # IF there are any left over values in solr_documentsm write them out now
+  puts "last iteration, adding this many solr documents"
+  puts solr_documents_hash.values.length.to_s
+ 
+  puts JSON.pretty_generate(solr_documents_hash.values)
+  puts "last iteration, added this many to unmatched list"
   if (solr_documents_hash.values.length > 0)
     write_file(unmatched_labels, unmatched_filename) 
    
     # Write documents to Solr
     update_suggest_index(solr_documents_hash.values)
   end
-  puts "last iteration, added this many solr documents"
-  puts solr_documents_hash.values.length.to_s
  
-  puts JSON.pretty_generate(solr_documents_hash.values)
-  puts "last iteration, added this many to unmatched list"
   puts unmatched_labels.length.to_s
 
 end
@@ -183,7 +184,6 @@ end
 
 # Lookup author browse index
 def lookup_author_browse_index(label)
-  puts "lookup author browse index #{label}"
   solr_url = ENV["AUTHOR_BROWSE_INDEX"] + "/select?q=authlabel_s:\"" + URI.encode(label) + "\"&wt=json";  
   url = URI.parse(solr_url)
   resp = Net::HTTP.get_response(url)
@@ -298,7 +298,6 @@ def query_fast_suggest(label)
  #fast_url = "http://fast.oclc.org/searchfast/fastsuggest?query=" + label + "&fl=" + topicFacet + ",id&queryIndex=" + topicFacet + "&queryReturn=id,*&rows=10&wt=json&suggest=fastSuggest";
  #Bad URI issue
  fast_url = "http://fast.oclc.org/fastIndex/select?q=altphrase:" + URI.encode("\"" + label + "\"") + "&rows=1&start=0&version=2.2&indent=on&fl=id,fullphrase,type&sort=usage desc&wt=json"
- puts fast_url.to_s
  url = URI.parse(fast_url)
  resp = Net::HTTP.get_response(url) 
  data = resp.body
@@ -376,7 +375,12 @@ def generate_solr_document(solr_data)
     #also preserving copy of original see also info from loc
     solr_document["loc_pseudonyms_ss"] = solr_document["pseudonyms_ss"]
   end
-  solr_document
+  
+  # Storing original wikidata text as array of strings
+  if(solr_data.key?("wd_pseudonyms"))
+    solr_document["wd_pseudonyms_ss"] = solr_data["wd_pseudonyms"]
+  end
+  return solr_document
 end
 
 def update_suggest_index(solr_documents)
@@ -491,7 +495,7 @@ def update_see_also()
     updates = get_see_also_info(doc)
     updates.each{|update|
       # consider using map
-      update_docs << {"id":update["id"], "pseudonyms_ss":{"set": update["pseudonyms_ss"]}, "pseudonyms_t":{"set":update["pseudonyms_t"]} }
+      update_docs << {"id":update["id"], "pseudonyms_ss":{"set": update["pseudonyms_ss"]}, "pseudonyms_t":{"set":update["pseudonyms_t"]}, "wd_pseudonyms_t":{"set":update["wd_pseudonyms_t"]} }
     }
   }
    
@@ -544,6 +548,21 @@ def update_with_see_also(solr_doc, see_json, see_doc_exists)
 		  pseudonym_text.delete_if {|t| t == see_label}
 		  solr_doc["pseudonyms_t"] = pseudonym_text
 		end  
+		
+		# ALSO remove anything that overlaps with this text in Wikidata
+		# THIS is because otherwise matchable text in Wikidata will result in matches we may not want
+		# Not a fool proof solution as it may remove more than we need 
+		
+		if(solr_doc.key?("wd_pseudonyms_t"))
+			wd_pseudo = solr_doc["wd_pseudonyms_t"]
+			# Split by white space and normalizing to lowercase
+			see_label_split = see_label.downcase.split(/[,\s]+/)
+			# If any words shared between Wikidata text and see also label, remove that Wikidata term
+			# Since we want to keep matchable text consistent
+			#Split on either comma or any number of spaces
+			wd_pseudo.delete_if {|w| ! (w.downcase.split(/[,\s]+/) & see_label_split).empty? }
+			solr_doc["wd_pseudonyms_t"] = wd_pseudo
+		end
 	else
 		# Remove see also URIs from display field
 		see_uri = see_json["uri"]
@@ -607,6 +626,9 @@ end
 def does_doc_exist(docs)
 	return docs.length > 0
 end
+ 
+
+ 
  
 ## Add pseudonyms for solr documents that already exist
 def add_pseudonym_info()
