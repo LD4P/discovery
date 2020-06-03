@@ -628,14 +628,14 @@ def does_doc_exist(docs)
 end
  
 
- 
+  
  
 ## Add pseudonyms for solr documents that already exist
 def add_pseudonym_info()
   # Updates: to be written at 100 Solr documents at a time
   # The first query should result in a list of all the URIs with type author contained within the index
   all_docs = retrieve_URIs_in_index("author")
-  puts all_docs.to_s
+  update_docs = []
   all_docs.each{|doc|
     id = doc["id"]
     uri = doc["uri_s"] 
@@ -649,10 +649,18 @@ def add_pseudonym_info()
     wikidata_info = retrieve_wikidata_info(uri, "author")      
     solr_data = solr_data.merge(wikidata_info)
     generated_doc = generate_solr_document(solr_data)
-    puts "resulting solr document"
-    puts JSON.pretty_generate(generated_doc)
     
+    # With this generated document, except for id and uri, use "set" for all other fields
+    # which have values/ are not null
+    fields = generated_doc.keys
+    fields.each{|field|
+      if(field != "id" && field != "uri_s" && !generated_doc[field].empty?)
+        generated_doc[field] = {"set":generated_doc[field]}
+      end
+    }
+    update_docs << generated_doc
   }
+  update_suggest_index(update_docs)
   
 end
 
