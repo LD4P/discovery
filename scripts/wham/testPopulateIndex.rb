@@ -501,6 +501,7 @@ def update_see_also()
    
   puts "final update results"
   puts JSON.pretty_generate(update_docs)
+  #
   update_suggest_index(update_docs)
   # Update Solr
 end
@@ -517,6 +518,7 @@ def get_see_also_info(solr_doc)
   # Using dup b/c we update the solr document itself and it seems
   # like the reference to the field in the document changes if the doc is changed
   see_also_values = solr_doc["pseudonyms_ss"].dup
+  see_also_ranks = {}
   puts "see also values for #{label} are"
   puts JSON.pretty_generate(see_also_values)
  
@@ -526,17 +528,40 @@ def get_see_also_info(solr_doc)
     see_label = see_json["label"]
     # Test to see if this URI already exists within Solr
     uri_docs = query_uri_exists(see_uri)
-    
-    see_also_exists = (uri_docs.length > 0) ? true: false
+    rank = nil
+    see_also_exists = false
+    if(uri_docs.length > 0)
+      see_also_exists = true
+      rank = uri_docs[0]["rank_i"]
+      see_also_ranks[see_uri] = rank
+    end
     puts "#{see_uri} has corresponding solr doc? #{see_also_exists.to_s}"
-    solr_doc = update_with_see_also(solr_doc, see_json, see_also_exists)
+    solr_doc = update_with_see_also(solr_doc, see_json, see_also_exists, rank)
   }
+  
+  # Update see also values in the updated solr doc with ranks 
+  see_also_values = solr_doc["pseudonyms_ss"].dup
+  updated_see = []
+  # At this point, all see also pseudonym_ss values should have an equivalent URI/catalog entry
+  see_also_values.each{|see|
+    see_j = JSON.parse(see)
+    uri = see_j["uri"]
+    if(see_also_ranks.key?(uri))
+      rank = see_also_ranks[uri]
+      # Also add rank to this json 
+      see_j["rank"] = rank
+      # With this addition, write this back to the field
+    end
+    # Stringify
+    updated_see << see_j.to_json
+  }
+  solr_doc["pseudonyms_ss"] = updated_see
   update_docs << solr_doc
   return update_docs
 end
 
 # update solr document in the case where a solr doc exists for see_also URI
-def update_with_see_also(solr_doc, see_json, see_doc_exists)
+def update_with_see_also(solr_doc, see_json, see_doc_exists, rank)
 	if(see_doc_exists == true)
 		# Remove text from pseudonym_t
 		see_label = see_json["label"]
