@@ -76,13 +76,6 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
   		solr_documents_hash = {}
   		umatched_labels = []
     end
-    
-    # after every 500 lookups, wait 30 seconds
-    # This is to prevent LCNAF lookups to throttle requests
-    if(counter % 100 === 0)
-      puts "sleeping 3 seconds, counter is #{counter.to_s}"
-      sleep 3
-    end
   }  
  #puts solr_documents.to_s
  # IF there are any left over values in solr_documentsm write them out now
@@ -99,7 +92,7 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
   end
  
   puts unmatched_labels.length.to_s
-  puts "Processed total #{counter.to_s}"
+
 end
 
 def retrieve_uri_for_label(label, entity_type)
@@ -470,18 +463,10 @@ def execute_wikidata_query(query)
   req_options = {
 	use_ssl: uri.scheme == "https",
   }	
-  result = nil
-  begin
-	  response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
-	    http.request(request)
-	  end
-	  result = JSON.parse(response.body)
-  rescue StandardError => e
-    puts "Rescued: #{e.inspect}"
-    puts query
-    result = nil
+  response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+    http.request(request)
   end
-  result
+  JSON.parse(response.body)
 end
 
 
@@ -495,7 +480,7 @@ end
 def retrieve_docs_with_see_also()
    solr_url = ENV["SUGGEST_SOLR"]
    solr = RSolr.connect :url => solr_url
-   response = solr.get 'select', :params => {:q => 'pseudonyms_ss:*', :rows => 700000}
+   response = solr.get 'select', :params => {:q => 'pseudonyms_ss:*'}
    return response["response"]["docs"]
 end
 
@@ -510,12 +495,7 @@ def update_see_also()
     updates = get_see_also_info(doc)
     updates.each{|update|
       # consider using map
-      # If the input solr doc doesn't have this key, then set is set to "null"
-      # which shouldn't change the solr doc at all since it didn't have the key to begin with
-      update_docs << {"id":update["id"], 
-      "pseudonyms_ss":{"set": update["pseudonyms_ss"]}, 
-      "pseudonyms_t":{"set":update["pseudonyms_t"]}, 
-      "wd_pseudonyms_t":{"set":update["wd_pseudonyms_t"]} }
+      update_docs << {"id":update["id"], "pseudonyms_ss":{"set": update["pseudonyms_ss"]}, "pseudonyms_t":{"set":update["pseudonyms_t"]}, "wd_pseudonyms_t":{"set":update["wd_pseudonyms_t"]} }
     }
   }
    
@@ -586,6 +566,8 @@ def update_with_see_also(solr_doc, see_json, see_doc_exists, rank)
 		# Remove text from pseudonym_t
 		see_label = see_json["label"]
 		# This should return an array of text values
+		puts "update with see also solr doc input"
+		puts solr_doc.keys.to_s
 		if(solr_doc.key?("pseudonyms_t"))
 		  pseudonym_text = solr_doc["pseudonyms_t"]
 		  pseudonym_text.delete_if {|t| t == see_label}
@@ -679,19 +661,13 @@ def add_pseudonym_info()
   # The first query should result in a list of all the URIs with type author contained within the index
   all_docs = retrieve_URIs_in_index("author")
   update_docs = []
-  doc_counter = 0
-  q_counter = 0
-  o_counter = 0
   all_docs.each{|doc|
-    q_counter = q_counter + 1
-    o_counter = o_counter + 1
     id = doc["id"]
     uri = doc["uri_s"] 
     solr_data = {"id":id, "uri":uri}.with_indifferent_access
     #Also get pseudonyms
     pseudonyms = retrieve_pseudonyms(uri, "author")
     if(pseudonyms.length > 0)
-      puts "loc pseudo"
       solr_data["pseudonym_data"] = pseudonyms      	
     end
     # Retrieve wikidata pseudonyms
@@ -705,45 +681,12 @@ def add_pseudonym_info()
     fields.each{|field|
       if(field != "id" && field != "uri_s" && !generated_doc[field].empty?)
         generated_doc[field] = {"set":generated_doc[field]}
-      end 
+      end
     }
-    
-    # If there are no other fields besided id and uri_s, don't add this
-    # because that overrides the document when we just want to set specific fields
-    if(generated_doc.keys.length > 2)
-      #puts "generated doc keys length is greater than 2"
-      #puts JSON.pretty_generate(generated_doc)
-      update_docs << generated_doc
-      doc_counter = doc_counter + 1
-    else
-    	#puts "generated doc keys length is two"
-    	#puts JSON.pretty_generate(generated_doc)
-    end
-    
-    if doc_counter == 100
-      puts o_counter
-      #puts "counter 100, adding pseudonym docs"
-      #puts JSON.pretty_generate(update_docs)
-      puts "Adding 100 documents"
-      update_suggest_index(update_docs)
-      doc_counter = 0
-      update_docs = []      
-    end 
-    
-    if q_counter == 100
-      # Sleep for 1 minute to prevent time outs
-      sleep 30
-      q_counter = 0
-      puts "reset sleep counter"
-    end
+    update_docs << generated_doc
   }
+  update_suggest_index(update_docs)
   
-  # If any left over, update Solr
-  if(update_docs.length > 0)
-    puts "adding remaining docs"
-    #puts JSON.pretty_generate(update_docs)
-    update_suggest_index(update_docs)
-  end
 end
 
 def retrieve_URIs_in_index(entity_type)
@@ -766,7 +709,7 @@ def write_file(json_data, filename)
   File.open(filename,"w") do |f|
     f.write(JSON.pretty_generate(json_data))
   end
-end 
+end
 #test_uri = "http://id.loc.gov/authorities/names/n79021164"
 #test_label_data = ["Twain, Mark, 1835-1910"]
 #retrieve_variant_labels(test_uri, "author") 
@@ -775,15 +718,13 @@ end
 
 # Method to start process of getting labels
 def process_file(action_type, entity_type, filename, unmatched_filename)
-  start_time = Time.new
-  puts "Start time #{start_time.inspect}"
   if(action_type == "load")
     load_json_label_values(entity_type, filename, unmatched_filename)
   end
   
   # If updating see also info, need only 
   if(action_type == "update")
-  	update_see_also() 
+  	update_see_also()
   end
   
   if(action_type == "unmatched")
@@ -793,8 +734,6 @@ def process_file(action_type, entity_type, filename, unmatched_filename)
   if(action_type == "pseudonym")
   	add_pseudonym_info()
   end
-  end_time = Time.now
-  puts "End time #{end_time.inspect}"
 end
 
 ### Running the file with these arguments will kick off the processing method 
