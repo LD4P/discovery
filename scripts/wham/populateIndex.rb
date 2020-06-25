@@ -76,6 +76,13 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
   		solr_documents_hash = {}
   		umatched_labels = []
     end
+    
+    # after every 500 lookups, wait 30 seconds
+    # This is to prevent LCNAF lookups to throttle requests
+    if(counter % 100 === 0)
+      puts "sleeping 3 seconds, counter is #{counter.to_s}"
+      sleep 3
+    end
   }  
  #puts solr_documents.to_s
  # IF there are any left over values in solr_documentsm write them out now
@@ -92,7 +99,7 @@ def update_info_for_labels(label_data, entity_type, unmatched_filename)
   end
  
   puts unmatched_labels.length.to_s
-
+  puts "Processed total #{counter.to_s}"
 end
 
 def retrieve_uri_for_label(label, entity_type)
@@ -488,7 +495,7 @@ end
 def retrieve_docs_with_see_also()
    solr_url = ENV["SUGGEST_SOLR"]
    solr = RSolr.connect :url => solr_url
-   response = solr.get 'select', :params => {:q => 'pseudonyms_ss:*'}
+   response = solr.get 'select', :params => {:q => 'pseudonyms_ss:*', :rows => 700000}
    return response["response"]["docs"]
 end
 
@@ -503,7 +510,12 @@ def update_see_also()
     updates = get_see_also_info(doc)
     updates.each{|update|
       # consider using map
-      update_docs << {"id":update["id"], "pseudonyms_ss":{"set": update["pseudonyms_ss"]}, "pseudonyms_t":{"set":update["pseudonyms_t"]}, "wd_pseudonyms_t":{"set":update["wd_pseudonyms_t"]} }
+      # If the input solr doc doesn't have this key, then set is set to "null"
+      # which shouldn't change the solr doc at all since it didn't have the key to begin with
+      update_docs << {"id":update["id"], 
+      "pseudonyms_ss":{"set": update["pseudonyms_ss"]}, 
+      "pseudonyms_t":{"set":update["pseudonyms_t"]}, 
+      "wd_pseudonyms_t":{"set":update["wd_pseudonyms_t"]} }
     }
   }
    
@@ -574,8 +586,6 @@ def update_with_see_also(solr_doc, see_json, see_doc_exists, rank)
 		# Remove text from pseudonym_t
 		see_label = see_json["label"]
 		# This should return an array of text values
-		puts "update with see also solr doc input"
-		puts solr_doc.keys.to_s
 		if(solr_doc.key?("pseudonyms_t"))
 		  pseudonym_text = solr_doc["pseudonyms_t"]
 		  pseudonym_text.delete_if {|t| t == see_label}
@@ -718,7 +728,7 @@ def add_pseudonym_info()
       update_suggest_index(update_docs)
       doc_counter = 0
       update_docs = []      
-    end
+    end 
     
     if q_counter == 100
       # Sleep for 1 minute to prevent time outs
