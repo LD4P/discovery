@@ -1,5 +1,7 @@
 # Discovery
-Documenting work (including planning, design, and implementation) being done as part of LD4P2 grant including institution-specific work for the grant (such as at Cornell).
+This repository began as a way to document work (including planning, design, and implementation) being done as part of LD4P2 grant including institution-specific work for the grant (such as at Cornell).  We plan on continuing to use this repository to track work and deliverables for Cornell in LD4P3 as well.  
+
+LD4P2-grant related information is available here: 
 
 ## Grant (overall) questions/discussions
 * [Initial brainstorming/analysis](https://drive.google.com/open?id=1hQ4ll0Qt58Jz2tA2WjAKCjsOtl3Ehk0n)
