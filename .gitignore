@@ -40,3 +40,6 @@
 .env
 # Mac OS files
 *.DS_Store
+
+#Ignore specific config file
+**/standalone/config.js
