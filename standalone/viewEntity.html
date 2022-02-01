@@ -3,9 +3,12 @@
 <head>
  <meta charset="utf-8"/>
  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <link href="vis.css" rel="stylesheet">
  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
  <script src="config.js"></script>
  <script src="viewEntity.js"></script>
+ <script src="http://d3js.org/d3.v3.min.js"></script>
+ <script src="tripleGraph.js"></script>
 </head>
 <body>
 <div class="container border">
@@ -21,7 +24,91 @@
 			<h2> As Object</h1>
 		</div>
 	</div>
-</div>
+	<input id="sdata" type="hidden"/>
+	<input id="odata" type="hidden"/>
+	 <div id="svg-body" class="panel-body"></div>
+	  <script>
+	  	function shortenDisplayURI(val) {
+	  		var returnVal = val;
+		  	//Shorten namespaces
+		  	/*
+		  	var namespaces = {
+		  		"http://id.loc.gov/ontologies/bibframe/":"bf:",
+		  		"http://www.w3.org/1999/02/22-rdf-syntax-ns#":"rdf:",
+		  		"http://id.loc.gov/ontologies/bflc/":"bflc:",
+		  		"https://svde.org/": "svde:"
+		  	};
+	  		
+	  		var namespace = "";
+	  		var shortened = "";
+	  		var localname = val;
+	  		if(val.indexOf("#") > -1) {
+	  			var indexHash = val.indexOf("#");
+	  			namespace = val.slice(0, indexHash + 1);
+	  			console.log(namespace);
+	  			localname = val.slice(indexHash + 1, val.length);
+	  			console.log(localname);
+	  		} else {
+	  			var lastIndexSlash = val.lastIndexOf("/");
+	  			namespace = val.slice(0, lastIndexSlash + 1);
+	  			console.log(namespace);
+	  			localname = val.slice(lastIndexSlash + 1, val.length);
+	  		}
+	  		if(namespace in namespaces) {
+	  			console.log("found namespace");
+	  			shortened = namespaces[namespace];
+	  			returnVal = shortened + localname;
+	  		} else {
+	  			//if not, then abbreviate certain beginnings
+	  		}
+	  		*/
+	  		//Only return things that start with http:// or https://, gets rid of literals
+	  		//Use only local names to shorten display
+	  		if(val.startsWith("http://") || val.startsWith("https://")) {
+	  			var separator = (val.indexOf("#") > -1)? "#" : "/";
+	  			var lastIndex= val.lastIndexOf(separator);
+	  			returnVal = val.slice(lastIndex + 1, val.length);
+	  			
+	  		} else {
+	  			returnVal = (returnVal.length > 15) ? returnVal.substring(0, 15): returnVal;
+	  		}
+	  		return returnVal;
+	  	}
+	  	var jsonString = $("#sdata").val();
+	  	var triples = JSON.parse(jsonString);
+	  	
+	  	triples = $.map(triples, function(val,i) {
+	  		var returnVal = {};
+	  		returnVal["subject"] = shortenDisplayURI(val["subject"]);
+	  		returnVal["predicate"] = shortenDisplayURI(val["predicate"]);
+	  		returnVal["object"] = shortenDisplayURI(val["object"]);
+	  		return returnVal;
+	  	});
+	  	
+	  	/*var triples = [
+	  			{subject:"ex:ThaiLand", 	predicate:"ex:hasFood", 	object:"ex:TomYumKung"},
+	  			{subject:"ex:TomYumKung", 	predicate:"rdf:type", 		object:"ex:SpicyFood"},
+	  			{subject:"ex:TomYumKung", 	predicate:"ex:includes", 	object:"ex:shrimp"},
+	  			{subject:"ex:TomYumKung", 	predicate:"ex:includes", 	object:"ex:chilly"},
+	  			{subject:"ex:TomYumKung", 	predicate:"ex:includes", 	object:"ex:lemon"},
+	  			{subject:"ex:lemon", 		predicate:"ex:hasTaste", 	object:"ex:sour"},
+	  			{subject:"ex:chilly", 		predicate:"ex:hasTaste", 	object:"ex:spicy"}
+	  		];
+		*/	
+		var svg = d3.select("#svg-body").append("svg")
+					.attr("width", 1000)
+					.attr("height", 1000)
+					;
+					
+		var force = d3.layout.force().size([1000, 1000]);
+		
+		var graph = triplesToGraph(triples);
+		
+		update();
+		
+	  </script>
+  
+	</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </body>
 </html>

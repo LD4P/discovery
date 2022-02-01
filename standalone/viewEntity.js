@@ -92,6 +92,8 @@
 	  				$("#subject").append("<div class='row'><div class='col'>" + p + "</div><div class='col'>" + o + "</div></div>" );
 	  			}
 	  		});
+	  		//Use these bindings to generate the triples for the graph
+	  		this.generateTriplesData(bindings, "subject");
 	  	}
 	  }
 	  
@@ -109,7 +111,28 @@
 	  				$("#object").append("<div class='row'><div class='col'>" + s + "</div><div class='col'>" + p + "</div></div>" );
 	  			}
 	  		});
+	  		
 	  	}
+
+	  }
+	  
+	  //Generate data as triples, convert to JSON string, and make graph
+	  generateTriplesData(bindings, dataType) {
+	  	//if as subject
+	  	var eThis = this;
+	  	if(dataType == "subject") {
+	  		var asSubjectTriples = $.map(bindings, function(val, i) { 
+	  			if (val && "p" in val && "value" in val["p"] 
+	  			&& "o" in val && "value" in val["o"]) {
+	  				var p = val["p"]["value"];
+	  				var o = val["o"]["value"];
+	  				return {"subject": eThis.uri, "predicate": p, "object": o}
+	  			}
+	  		});
+	  		$("#sdata").val(JSON.stringify(asSubjectTriples));
+
+	  	}
+	  	//if as object
 	  }
 	  
 	

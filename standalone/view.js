@@ -129,7 +129,7 @@
 	  }
 	  
 	  displayIndividualPredicate(predicateURI) {
-	  	var predicateLink = "viewStatements.html?type=predicate&uri=" + classURI;
+	  	var predicateLink = "viewStatements.html?type=predicate&uri=" + predicateURI;
 	  	return "<div class='row' uri='" + predicateURI + "'><div class='col-8'>" + predicateURI + "</div><div class='col-2' role='count'></div><div class='col-2' role='examples'><a href='" + predicateLink + "'>Examples</a></div></div>";
 	  }
 	  
