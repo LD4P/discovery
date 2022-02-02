@@ -28,55 +28,11 @@
 	<input id="odata" type="hidden"/>
 	 <div id="svg-body" class="panel-body"></div>
 	  <script>
-	  	function shortenDisplayURI(val) {
-	  		var returnVal = val;
-		  	//Shorten namespaces
-		  	/*
-		  	var namespaces = {
-		  		"http://id.loc.gov/ontologies/bibframe/":"bf:",
-		  		"http://www.w3.org/1999/02/22-rdf-syntax-ns#":"rdf:",
-		  		"http://id.loc.gov/ontologies/bflc/":"bflc:",
-		  		"https://svde.org/": "svde:"
-		  	};
-	  		
-	  		var namespace = "";
-	  		var shortened = "";
-	  		var localname = val;
-	  		if(val.indexOf("#") > -1) {
-	  			var indexHash = val.indexOf("#");
-	  			namespace = val.slice(0, indexHash + 1);
-	  			console.log(namespace);
-	  			localname = val.slice(indexHash + 1, val.length);
-	  			console.log(localname);
-	  		} else {
-	  			var lastIndexSlash = val.lastIndexOf("/");
-	  			namespace = val.slice(0, lastIndexSlash + 1);
-	  			console.log(namespace);
-	  			localname = val.slice(lastIndexSlash + 1, val.length);
-	  		}
-	  		if(namespace in namespaces) {
-	  			console.log("found namespace");
-	  			shortened = namespaces[namespace];
-	  			returnVal = shortened + localname;
-	  		} else {
-	  			//if not, then abbreviate certain beginnings
-	  		}
-	  		*/
-	  		//Only return things that start with http:// or https://, gets rid of literals
-	  		//Use only local names to shorten display
-	  		if(val.startsWith("http://") || val.startsWith("https://")) {
-	  			var separator = (val.indexOf("#") > -1)? "#" : "/";
-	  			var lastIndex= val.lastIndexOf(separator);
-	  			returnVal = val.slice(lastIndex + 1, val.length);
-	  			
-	  		} else {
-	  			returnVal = (returnVal.length > 15) ? returnVal.substring(0, 15): returnVal;
-	  		}
-	  		return returnVal;
-	  	}
+
 	  	var jsonString = $("#sdata").val();
 	  	var triples = JSON.parse(jsonString);
 	  	
+	  	/*
 	  	triples = $.map(triples, function(val,i) {
 	  		var returnVal = {};
 	  		returnVal["subject"] = shortenDisplayURI(val["subject"]);
@@ -84,17 +40,8 @@
 	  		returnVal["object"] = shortenDisplayURI(val["object"]);
 	  		return returnVal;
 	  	});
-	  	
-	  	/*var triples = [
-	  			{subject:"ex:ThaiLand", 	predicate:"ex:hasFood", 	object:"ex:TomYumKung"},
-	  			{subject:"ex:TomYumKung", 	predicate:"rdf:type", 		object:"ex:SpicyFood"},
-	  			{subject:"ex:TomYumKung", 	predicate:"ex:includes", 	object:"ex:shrimp"},
-	  			{subject:"ex:TomYumKung", 	predicate:"ex:includes", 	object:"ex:chilly"},
-	  			{subject:"ex:TomYumKung", 	predicate:"ex:includes", 	object:"ex:lemon"},
-	  			{subject:"ex:lemon", 		predicate:"ex:hasTaste", 	object:"ex:sour"},
-	  			{subject:"ex:chilly", 		predicate:"ex:hasTaste", 	object:"ex:spicy"}
-	  		];
-		*/	
+	  	*/
+	  
 		var svg = d3.select("#svg-body").append("svg")
 					.attr("width", 1000)
 					.attr("height", 1000)
