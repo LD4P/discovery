@@ -2,6 +2,8 @@
 	
 	  constructor(fusekiURL) {
 	  	this.fusekiURL = fusekiURL;
+	  	//Saving triples in field
+	  	this.triples = [];
 	  }
 	  init() {
 	  	this.initURI();
@@ -34,16 +36,25 @@
 	    return false;
 	}
 	
-		getEntityInfo() {
-			this.executeQuery(this.getSubjectQuery(this.uri), this.displaySubjectInfo.bind(this));
-			this.executeQuery(this.getObjectQuery(this.uri), this.displayObjectInfo.bind(this));
+	getEntityInfo() {
+		//var sajax = this.executeQuery(this.getSubjectQuery(this.uri), this.displaySubjectInfo.bind(this));
+		//var oajax = this.executeQuery(this.getObjectQuery(this.uri), this.displayObjectInfo.bind(this));
+		var sajax = this.getPromiseQuery(this.getSubjectQuery(this.uri));
+		var oajax = this.getPromiseQuery(this.getObjectQuery(this.uri));
+		$.when(sajax, oajax).done(function(sres, ores) {
+			var sdata = sres[0];
+			var odata = ores[0];
+			this[0].displaySubjectInfo(sdata);
+			this[1].displayObjectInfo(odata);
+			this[0].addToGraph(this[0].triples);
+		});
 
-		}
+	}
 	  //Execute query against Fuseki
 	  //callbackData is an object you can send with values in case the specific callback function needs to employ additional info
 	  executeQuery(query, callback, callbackData) {
 	  	var url = this.fusekiURL;
-	  	$.ajax({
+	  	return $.ajax({
 			url:url,
 			context:this,
 			data: {
@@ -56,7 +67,17 @@
 				callback(data);
 			}
 		});
-		
+	  }
+	  
+	  getPromiseQuery(query) {
+	  	var url = this.fusekiURL;
+	  	return $.ajax({
+			url:url,
+			context:this,
+			data: {
+				query: query
+			}
+		});
 	  }
 	  //Queries
 	   //Queries
@@ -93,12 +114,16 @@
 	  			}
 	  		});
 	  		//Use these bindings to generate the triples for the graph
-	  		this.generateTriplesData(bindings, "subject");
+	  		//this.updateVisualization(bindings, "subject");
+	  		this.triples = this.triples.concat(this.generateTriplesData(bindings, "subject"));
+
 	  	}
 	  }
 	  
 	  displayObjectInfo(data) {
 	    var eThis = this;
+	   	console.log("displayOInfo");
+	    console.log(data);
 	  	if("results" in data && "bindings" in data["results"] && data["results"]["bindings"].length) {
 	  		//Map bindings to html
 	  		var bindings = data["results"]["bindings"];
@@ -111,7 +136,8 @@
 	  				$("#object").append("<div class='row'><div class='col'>" + s + "</div><div class='col'>" + p + "</div></div>" );
 	  			}
 	  		});
-	  		
+	  		this.triples = this.triples.concat(this.generateTriplesData(bindings, "object"));
+	  		//this.updateVisualization(bindings, "object");
 	  	}
 
 	  }
@@ -120,8 +146,9 @@
 	  generateTriplesData(bindings, dataType) {
 	  	//if as subject
 	  	var eThis = this;
+	  	var triples = [];
 	  	if(dataType == "subject") {
-	  		var asSubjectTriples = $.map(bindings, function(val, i) { 
+	  		triples = $.map(bindings, function(val, i) { 
 	  			if (val && "p" in val && "value" in val["p"] 
 	  			&& "o" in val && "value" in val["o"]) {
 	  				var p = val["p"]["value"];
@@ -129,13 +156,31 @@
 	  				return {"subject": eThis.uri, "predicate": p, "object": o}
 	  			}
 	  		});
-	  		$("#sdata").val(JSON.stringify(asSubjectTriples));
+
+	  	} else if(dataType == "object") {
+	  		triples = $.map(bindings, function(val, i) { 
+	  			if (val && "p" in val && "value" in val["p"] 
+	  			&& "s" in val && "value" in val["s"]) {
+	  				//return eThis.displayIndividualClass(val["type"]["value"]);
+	  				var p = val["p"]["value"];
+	  				var s = val["s"]["value"];
+	  				return {"subject": s, "predicate": p, "object": eThis.uri}
+	  			}
+	  		});
 
 	  	}
+	  	return triples;
 	  	//if as object
 	  }
 	  
-	
+	  //Update graph
+	  //Relies on methods specified in tripleGraph
+	  addToGraph(triples) {
+	  	console.log("add to graph");
+	  	console.log(triples);
+	  	var graph = triplesToGraph(triples);
+		update(graph);
+	  }
 	  
 }
 

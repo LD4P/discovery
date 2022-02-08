@@ -108,6 +108,9 @@ function addTooltip(circle) {
 }
 
 //Add hover
+function bindEventHandlers() {
+	addHoverHandler();
+}
 function addHoverHandler() {
 	 svg.selectAll(".node,.link")
 		.on("mouseover", function() {
@@ -122,7 +125,8 @@ function addHoverHandler() {
 		    });  
 }
 
-function update(){
+//Changed this to use graph as argument, used as external variable earlier
+function update(graph){
 	// ==================== Add Marker ====================
 	svg.append("svg:defs").selectAll("marker")
 	    .data(["end"])
@@ -221,8 +225,7 @@ function update(){
       .start()
 	  ;
 	  //Changed link distance to 500 from 100
-	  
 	  //Add event handlers
-	  addHoverHandler();
+	  bindEventHandlers();
 }
 
