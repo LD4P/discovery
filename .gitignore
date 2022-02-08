@@ -42,4 +42,4 @@
 *.DS_Store
 
 #Ignore specific config file
-**/standalone/config.js
+**/standalone/js/config.js
