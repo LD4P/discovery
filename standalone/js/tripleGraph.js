@@ -72,11 +72,8 @@ function addTooltip(circle) {
     var x = parseFloat(circle.attr("cx"));
     var y = parseFloat(circle.attr("cy"));
     var r = parseFloat(circle.attr("r"));
-    console.log(x);
-    console.log(y);
-    console.log(r)
+    
     var text = circle.attr("id");
-	console.log(text);
     var tooltip = svg
         .append("text")
         .text(text)
