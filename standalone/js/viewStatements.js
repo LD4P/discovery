@@ -99,7 +99,12 @@
 	  				var p = val["p"]["value"];
 	  				var o = val["o"]["value"];
 	  				var sLink = "viewEntity.html?uri=" + s;
-	  				$("#statements").append("<div class='row'><div class='col'><a href='" + sLink + "'>" + s + "</a></div><div class='col'>" + p + "</div><div class='col'>" + o + "</div></div>" );
+	  				var oDisplay = o;
+	  				//Provide object link for statements that are not rdf type
+	  				if( !(p == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type") && (o.startsWith("http://") || o.startsWith("https://"))) {
+						oDisplay = "<a href='viewEntity.html?uri=" + o + "'>" +o + "</a>";
+					}
+	  				$("#statements").append("<div class='row'><div class='col'><a href='" + sLink + "'>" + s + "</a></div><div class='col'>" + p + "</div><div class='col'>" + oDisplay + "</div></div>" );
 	  			}
 	  		});
 	  	}
