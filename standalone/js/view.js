@@ -10,8 +10,8 @@
 
 	  populateSummary() {
 	  	//Populate information about total classes and predicates
-	  	var classesQuery = this.getClassesQuery();
-	  	this.executeQuery(classesQuery, this.displayClasses.bind(this));
+	  	//var classesQuery = this.getClassesQuery();
+	  	//this.executeQuery(classesQuery, this.displayClasses.bind(this));
 	  	this.executeQuery(this.getPredicatesQuery(), this.displayPredicates.bind(this));
 
 	  }
@@ -56,8 +56,8 @@
 	  	return this.getPrefixes() + "SELECT DISTINCT ?predicate WHERE {?s ?predicate ?o}";
 	  }
 
-	  getPredicatesCountQuery() {
-	  	return this.getPrefixes() + "SELECT (COUNT (DISTINCT ?predicate) AS ?ct) WHERE {?s ?predicate ?o}";
+	  getPredicateCountQuery(predicateURI) {
+	  	return this.getPrefixes() + "SELECT (COUNT (?p) AS ?ct) WHERE {VALUES(?p) {(<" + predicateURI + ">)} ?s ?p ?o. } GROUP BY ?p";
 	  }
 
 	  //Display methods
@@ -129,12 +129,41 @@
 	  		$("#loadingPredicates").addClass("d-none");
 	  		$("#predicates").append(displayHTML.join(""));
 	  	}
+	  		//Kick off count ajax queries
+	  	this.getPredicateCounts(bindings);
 
 	  }
 
 	  displayIndividualPredicate(predicateURI) {
 	  	var predicateLink = "viewStatements.html?type=predicate&uri=" + predicateURI;
 	  	return "<div class='row' uri='" + predicateURI + "'><div class='col-8'>" + predicateURI + "</div><div class='col-2' role='count'><div class='dot-elastic'></div></div><div class='col-2' role='examples'><a href='" + predicateLink + "'>Examples</a></div></div>";
+	  }
+
+	  getPredicateCounts(bindings) {
+		var eThis = this;
+		var uris = $.map(bindings, function(val, i) {
+			if (val && "predicate" in val && "value" in val["predicate"]) {
+				return val["predicate"]["value"];
+			}
+		});
+		$.each(uris, function(i, v) {
+			eThis.executeQuery(eThis.getPredicateCountQuery(v),eThis.displayPredicateCounts.bind(eThis), {"uri":v});
+		});
+	  }
+
+	  displayPredicateCounts(data, callbackData) {
+		var eThis = this;
+		var uri = callbackData["uri"];
+		if("results" in data && "bindings" in data["results"] && data["results"]["bindings"].length) {
+			//Map bindings to html
+			var bindings = data["results"]["bindings"];
+			var displayHTML = $.map(bindings, function(val, i) {
+				if (val && "ct" in val && "value" in val["ct"]) {
+					var count = val["ct"]["value"];
+					$("div[uri='" + uri + "'] div[role='count']").html(count);
+				}
+			});
+		}
 	  }
 
 

@@ -1,5 +1,5 @@
 	class ViewStatements {
-	
+
 	  constructor(fusekiURL) {
 	  	this.fusekiURL = fusekiURL;
 	  }
@@ -8,33 +8,33 @@
 	  	this.updateHeading();
 	  	this.getStatements();
 	  }
-	  
+
 	  initURI() {
 	  	this.uri= this.getUrlParameter("uri");
 	  	this.type = this.getUrlParameter("type");
 	  }
-	  
+
 	  updateHeading() {
 	  	$("#pageheading").append(" " + this.uri);
 	  }
-	  
+
 	  //Get URL parameter
 	 getUrlParameter(sParam) {
 	    var sPageURL = window.location.search.substring(1),
 	        sURLVariables = sPageURL.split('&'),
 	        sParameterName,
 	        i;
-	
+
 	    for (i = 0; i < sURLVariables.length; i++) {
 	        sParameterName = sURLVariables[i].split('=');
-	
+
 	        if (sParameterName[0] === sParam) {
 	            return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
 	        }
 	    }
 	    return false;
 	}
-	
+
 	getStatements() {
 		//Types = subject or predicate
 		if(this.type == "subject") {
@@ -62,13 +62,13 @@
 				callback(data);
 			}
 		});
-		
+
 	  }
 	  //Queries
 	   //Queries
-	  
+
 	  getPrefixes() {
-	  	return "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " + 
+	  	return "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
 	  	"PREFIX bf: <http://id.loc.gov/ontologies/bibframe/> ";
 	  }
 	  //Get statements where the subject is of type represented by URI
@@ -76,13 +76,13 @@
 	  getAsSubjectQuery(typeURI) {
 	  	return this.getPrefixes() + "SELECT ?s ?p ?o  WHERE {?s rdf:type <"+ typeURI + "> . ?s ?p ?o .} LIMIT 100";
 	  }
-	  
+
 	   getWithPredicateQuery(predicateURI) {
-	  	return this.getPrefixes() + "SELECT ?s ?o  WHERE {?s <" + predicateURI + "> + ?o .} LIMIT 100";
+	  	return this.getPrefixes() + "SELECT ?s ?p ?o  WHERE {VALUES(?p) {(<" + predicateURI + ">)} ?s ?p ?o .} LIMIT 100";
 	  }
-	  
-	
-	  
+
+
+
 	  //Display methods
 	  //Classes
 	  displayStatementsAsSubject(data) {
@@ -90,9 +90,9 @@
 	  	if("results" in data && "bindings" in data["results"] && data["results"]["bindings"].length) {
 	  		//Map bindings to html
 	  		var bindings = data["results"]["bindings"];
-	  		var displayHTML = $.map(bindings, function(val, i) { 
-	  			if (val && "s" in val && "value" in val["s"] 
-	  			&& "p" in val && "value" in val["p"] 
+	  		var displayHTML = $.map(bindings, function(val, i) {
+	  			if (val && "s" in val && "value" in val["s"]
+	  			&& "p" in val && "value" in val["p"]
 	  			&& "o" in val && "value" in val["o"]) {
 	  				//return eThis.displayIndividualClass(val["type"]["value"]);
 	  				var s = val["s"]["value"];
@@ -109,27 +109,38 @@
 	  		});
 	  	}
 	  }
-	  
+
 	   displayStatementsWithPredicate(data) {
 	    var eThis = this;
 	  	if("results" in data && "bindings" in data["results"] && data["results"]["bindings"].length) {
 	  		//Map bindings to html
 	  		var bindings = data["results"]["bindings"];
-	  		var displayHTML = $.map(bindings, function(val, i) { 
-	  			if (val && "s" in val && "value" in val["s"] 
-	  			&& "o" in val && "value" in val["o"]) {
-	  				//return eThis.displayIndividualClass(val["type"]["value"]);
-	  				var p = val["s"]["value"];
+	  		var displayHTML = $.map(bindings, function(val, i) {
+	  			if (val && "s" in val && "value" in val["s"]
+						&& "p" in val && "value" in val["p"]
+						&& "o" in val && "value" in val["o"]) {
+							//return eThis.displayIndividualClass(val["type"]["value"]);
+					var s = val["s"]["value"];
+					var p = val["p"]["value"];
 	  				var o = val["o"]["value"];
-	  				$("#statements").append("<div class='row'><div class='col'>" + s + "</div><div class='col'>" + o + "</div></div>" );
+
+	  				var sLink = "viewEntity.html?uri=" + s;
+	  				var oDisplay = o;
+	  				//Provide object link for statements that are not rdf type
+					if( !(p == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type") && (o.startsWith("http://") || o.startsWith("https://"))) {
+						oDisplay = "<a href='viewEntity.html?uri=" + o + "'>" +o + "</a>";
+					}
+					$("#statements").append("<div class='row'><div class='col'><a href='" + sLink + "'>" + s + "</a></div><div class='col'>" + p + "</div><div class='col'>" + oDisplay + "</div></div>" );
+
+	  				//$("#statements").append("<div class='row'><div class='col'>" + s + "</div><div class='col'>" + o + "</div></div>" );
 	  			}
 	  		});
 	  	}
 	  }
-	  
-	
-	
-	  
+
+
+
+
 }
 
 $( document ).ready(function() {
