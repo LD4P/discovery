@@ -10,8 +10,8 @@
 
 	  populateSummary() {
 	  	//Populate information about total classes and predicates
-	  	//var classesQuery = this.getClassesQuery();
-	  	//this.executeQuery(classesQuery, this.displayClasses.bind(this));
+	  	var classesQuery = this.getClassesQuery();
+	  	this.executeQuery(classesQuery, this.displayClasses.bind(this));
 	  	this.executeQuery(this.getPredicatesQuery(), this.displayPredicates.bind(this));
 
 	  }
