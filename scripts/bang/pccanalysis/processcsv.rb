@@ -84,6 +84,7 @@ def query_solr(isbns)
 end
 
 def execute_solr_query(solr_query)
+	# This is the SOLR URL for our copy of the catalog Solr index.  Replace with the Solr index you wish to query
 	base_url =  "http://ld4p3-folio-solr.library.cornell.edu/solr/blacklight"
 	solr_url= base_url + "/select?q=isbn_t:" + solr_query + "&wt=json&fl=id,isbn_t&rows=20"
   	url = URI.parse(solr_url)
