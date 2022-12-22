@@ -54,7 +54,8 @@ end
 #Execute a given query
 
 def execute_query(query)
-  uri = URI.parse("http://deep-thought.slis.uiowa.edu:3030/PCC/sparql")
+  # Insert the URL of your Fuseki server 
+  uri = URI.parse("[Fuseki server SPARQL endpoint URL]")
   request = Net::HTTP::Post.new(uri)
   request["Accept"] = "application/sparql-results+json, application/rdf+json, application/json"
   request.set_form_data(
