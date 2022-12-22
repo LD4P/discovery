@@ -84,6 +84,7 @@ def query_solr(lccns)
 end
 
 def execute_solr_query(solr_query)
+	# This is the SOLR URL for our copy of the catalog index.  Replace with the Solr URL you wish to query.
 	base_url =  "http://ld4p3-folio-solr.library.cornell.edu/solr/blacklight"
 	solr_url= base_url + "/select?q=lc_controlnum_s:(" + solr_query + ")&wt=json&fl=id,lc_controlnum_s&rows=20"
   	url = URI.parse(solr_url)
